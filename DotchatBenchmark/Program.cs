@@ -1,11 +1,12 @@
-﻿using BenchmarkDotNet.Running;
+﻿using BenchmarkDotNet.Reports;
+using BenchmarkDotNet.Running;
 
 namespace DotchatBenchmark;
 
-internal class Program
+internal static class Program
 {
-    static void Main(string[] args)
+    static void Main()
     {
-        var _ = BenchmarkRunner.Run(typeof(Program).Assembly);
+        Summary[] _ = BenchmarkRunner.Run(typeof(Program).Assembly);
     }
 }

@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-
-namespace DotchatClient;
+﻿namespace DotchatClient;
 
 public static class MauiProgram
 {
