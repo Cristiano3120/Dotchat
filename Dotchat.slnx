@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Dotchat/DotchatServer.csproj" />
+  <Project Path="DotchatBenchmark/DotchatBenchmark.csproj" />
+  <Project Path="DotchatClient/DotchatClient.csproj" Id="bfe2e1ad-a9e5-4bee-aa46-cc804069f256" />
+  <Project Path="DotchatShared/DotchatShared.csproj" />
+</Solution>

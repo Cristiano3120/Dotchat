@@ -1,0 +1,6 @@
+@Dotchat_HostAddress = http://localhost:5200
+
+GET {{Dotchat_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
