@@ -9,18 +9,25 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.4" />
+    <PackageReference Include="DotNetEnv" Version="3.1.1" />
+    <PackageReference Include="Dunet" Version="1.16.1" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
+    <PackageReference Include="RedisRateLimiting" Version="1.2.1" />
+    <PackageReference Include="StackExchange.Redis" Version="2.12.4" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="tests\" />
-    <Folder Include="src\API\Controllers\" />
     <Folder Include="src\Application\DTOs\" />
     <Folder Include="src\Application\Interfaces\" />
     <Folder Include="src\Core\Enums\" />
     <Folder Include="src\Core\Entities\" />
     <Folder Include="src\Infrastructure\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DotchatShared\DotchatShared.csproj" />
   </ItemGroup>
 
 </Project>
