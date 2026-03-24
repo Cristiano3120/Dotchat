@@ -1,8 +1,10 @@
+using DotchatServer.src.Application.Interfaces.Security;
 using DotchatServer.src.Constants;
 using DotNetEnv;
 using Microsoft.AspNetCore.HttpOverrides;
 using RedisRateLimiting;
 using StackExchange.Redis;
+using System.Collections;
 
 namespace DotchatServer.src;
 
@@ -45,14 +47,16 @@ public static class Program
         });
 
         WebApplication app = builder.Build();
-
+        
         _ = app.UseForwardedHeaders(new ForwardedHeadersOptions
         {
             ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
         });
 
+        _ = app.MapOpenApi();
         _ = app.UseRateLimiter();
         _ = app.MapControllers();
-        await app.RunAsync("https://localhost:7250");//TODO: Put into appsettings.json
+
+        await app.RunAsync(app.Configuration.GetConnectionString("WebAdress"));
     }
 }
