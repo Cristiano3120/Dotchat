@@ -8,19 +8,21 @@ namespace DotchatServer.src.Application.Services;
 
 public sealed class AuthService(
     [FromKeyedServices(HashingAlgorithm.Argon2)] IHashingService hashingService,
-    IAuthRepository authRepository)
+    IAuthRepository authRepository,
+    SnowflakeGenerator snowflakeGenerator)
 {
     public async Task RegisterAsync(RegisterRequest registerRequest)
     {
         ApplicationUser applicationUser = new()
         {
-            Id = 0, //TODO: Issue #11
+            Id = snowflakeGenerator.NextId(),
             Username = registerRequest.Username,
             Birthday = registerRequest.Birthday,
             DisplayName = registerRequest.Display,
             Email = registerRequest.Email,
             PasswordHash = hashingService.Hash(registerRequest.Password)
         };
+
         await authRepository.CreateUser(applicationUser);
     }
 }
