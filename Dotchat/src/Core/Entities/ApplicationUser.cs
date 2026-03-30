@@ -1,4 +1,6 @@
-﻿namespace DotchatServer.src.Core.Entities;
+﻿using DotchatServer.src.Application.Services;
+
+namespace DotchatServer.src.Core.Entities;
 
 public sealed record ApplicationUser
 {
@@ -15,5 +17,5 @@ public sealed record ApplicationUser
     public string PasswordHash { get; init; } = string.Empty;
 
     // ── TIMESTAMPS ────────────────────────────────────────────────
-    public DateTimeOffset CreatedAt => throw new NotImplementedException("Get Created from ID >>"); //TODO: Issue #12
+    public DateTimeOffset CreatedAt => SnowflakeGenerator.GetCreationTime(Id); //TODO: Issue #12
 }

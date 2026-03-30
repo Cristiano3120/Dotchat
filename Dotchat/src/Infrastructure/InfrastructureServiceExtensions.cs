@@ -2,7 +2,7 @@
 
 public static class InfrastructureServiceExtensions
 {
-    public static void AddInfrastructure(this IServiceCollection services)
+    public static void AddInfrastructureServices(this IServiceCollection services)
     {
         
     }

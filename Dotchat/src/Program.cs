@@ -1,10 +1,15 @@
-using DotchatServer.src.Application.Interfaces.Security;
+using DotchatServer.src.Application;
+using DotchatServer.src.Application.DTOs;
+using DotchatServer.src.Application.Services;
 using DotchatServer.src.Constants;
+using DotchatServer.src.Infrastructure;
 using DotNetEnv;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.IdentityModel.Tokens;
 using RedisRateLimiting;
 using StackExchange.Redis;
-using System.Collections;
+using System.Text;
 
 namespace DotchatServer.src;
 
@@ -30,8 +35,8 @@ public static class Program
         _ = builder.Services.AddControllers();
         _ = builder.Services.AddOpenApi();
         _ = builder.Services.AddRateLimiter(options =>
-        { 
-            _ = options.AddPolicy(policyName: RateLimitPolicies.Auth, 
+        {
+            _ = options.AddPolicy(policyName: RateLimitPolicies.Auth,
                 httpContext => RedisRateLimitPartition.GetSlidingWindowRateLimiter(
                     partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault(),
                     factory: _ => new RedisSlidingWindowRateLimiterOptions
@@ -46,8 +51,37 @@ public static class Program
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
         });
 
-        WebApplication app = builder.Build();
+        JwtSettings jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()
+            ?? throw new InvalidOperationException("Failed to bind JwtSettings from configuration.");
+
+        _ = builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtSettings.Issuer,
+                ValidAudience = jwtSettings.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(key: Encoding.UTF8.GetBytes(jwtSettings.Key)),
+                ClockSkew = TimeSpan.Zero 
+            };
+        });
+
+        _ = builder.Services.AddAuthorization();
+
         
+        builder.Services.AddApplicationServices(jwtSettings, workerID: builder.Configuration.GetValue<int>("WorkerID"));
+        builder.Services.AddInfrastructureServices();
+
+        WebApplication app = builder.Build();
+
         _ = app.UseForwardedHeaders(new ForwardedHeadersOptions
         {
             ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
