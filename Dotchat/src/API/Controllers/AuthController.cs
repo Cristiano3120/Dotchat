@@ -1,9 +1,13 @@
-﻿using DotchatServer.src.Application.Services;
+﻿using DotchatServer.src.Application.DTOs;
+using DotchatServer.src.Application.Services;
 using DotchatServer.src.Constants;
 using DotchatShared.src.Constants;
 using DotchatShared.src.DTOs.AuthRequests;
+using DotchatShared.src.Enums;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Net;
 
 namespace DotchatServer.src.API.Controllers;
 
@@ -21,7 +25,15 @@ public sealed class AuthController(AuthService authService) : ControllerBase
     [HttpPost(Endpoints.AuthEndpoints.Register)]
     public async Task<IActionResult> RegisterAsync([FromBody] RegisterRequest registerRequest)
     {
-        await authService.RegisterAsync(registerRequest);
-        return Ok();
+        RegisterResult registerResult = await authService.RegisterAsync(registerRequest);
+        return registerResult.Match(
+            Ok, // Success case: return 200 OK with the result
+            error => error.Type switch
+            {
+                RegisterErrorType.EmailTaken or RegisterErrorType.UsernameTaken => Conflict(error),
+                RegisterErrorType.DbUnavailable => StatusCode((int)HttpStatusCode.ServiceUnavailable, error),
+                _ => StatusCode((int)HttpStatusCode.InternalServerError, error)
+            }
+        );
     }
 }

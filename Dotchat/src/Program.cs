@@ -1,5 +1,7 @@
 using DotchatServer.src.Application;
 using DotchatServer.src.Application.DTOs;
+using DotchatServer.src.Application.Enums;
+using DotchatServer.src.Application.Interfaces.Security;
 using DotchatServer.src.Application.Services;
 using DotchatServer.src.Constants;
 using DotchatServer.src.Infrastructure;
@@ -9,6 +11,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using RedisRateLimiting;
 using StackExchange.Redis;
+using System.Diagnostics;
 using System.Text;
 
 namespace DotchatServer.src;
@@ -19,18 +22,6 @@ public static class Program
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder();
         IEnumerable<KeyValuePair<string, string>> envVals = Env.Load();
-
-        _ = builder.Services.AddSingleton<IConnectionMultiplexer>((_) =>
-        {
-            ConfigurationOptions conf = new()
-            {
-                EndPoints = { envVals.FirstOrDefault(x => x.Key == "REDIS_ENDPOINT").Value },
-                Password = envVals.FirstOrDefault(x => x.Key == "REDIS_PASSWORD").Value,
-                AbortOnConnectFail = false,
-            };
-
-            return ConnectionMultiplexer.Connect(conf);
-        });
 
         _ = builder.Services.AddControllers();
         _ = builder.Services.AddOpenApi();
@@ -70,15 +61,15 @@ public static class Program
                 ValidIssuer = jwtSettings.Issuer,
                 ValidAudience = jwtSettings.Audience,
                 IssuerSigningKey = new SymmetricSecurityKey(key: Encoding.UTF8.GetBytes(jwtSettings.Key)),
-                ClockSkew = TimeSpan.Zero 
+                ClockSkew = TimeSpan.Zero
             };
         });
 
         _ = builder.Services.AddAuthorization();
 
-        
+
+        builder.Services.AddInfrastructureServices(envVals, configuration: builder.Configuration);
         builder.Services.AddApplicationServices(jwtSettings, workerID: builder.Configuration.GetValue<int>("WorkerID"));
-        builder.Services.AddInfrastructureServices();
 
         WebApplication app = builder.Build();
 
@@ -89,8 +80,17 @@ public static class Program
 
         _ = app.MapOpenApi();
         _ = app.UseRateLimiter();
+        _ = app.UseRouting();
+        _ = app.UseAuthentication();  
+        _ = app.UseAuthorization();
         _ = app.MapControllers();
-
+        var h = app.Services.GetRequiredKeyedService<IHashingService>(HashingAlgorithm.Argon2);
+        for (int i = 0; i < 1000; i++)
+        {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            h.Hash("asdfzuhabfszuiasbfauzhsbf");
+            Console.WriteLine(stopwatch.ElapsedMilliseconds);
+        }
         await app.RunAsync(app.Configuration.GetConnectionString("WebAdress"));
     }
 }

@@ -1,5 +1,5 @@
 ﻿using DotchatServer.src.Core.Entities;
-using DotchatServer.src.Core.Enums;
+using DotchatShared.src.Enums;
 
 namespace DotchatServer.src.Application.Interfaces;
 

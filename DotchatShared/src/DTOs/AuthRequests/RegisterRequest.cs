@@ -11,12 +11,12 @@ namespace DotchatShared.src.DTOs.AuthRequests;
 /// <param name="Email">The email address of the user. Must be a valid email format.</param>
 /// <param name="Password">The password for the new account. Must be at least 8 characters in length.</param>
 /// <param name="Username">The username for the new account. Must be at least 3 characters in length.</param>
-/// <param name="Display">The display name to associate with the user account.</param>
+/// <param name="DisplayName">The display name to associate with the user account.</param>
 /// <param name="Birthday">The user's date of birth.</param>
 public sealed record RegisterRequest(
     [EmailAddress] string Email,
     [MinLength(8)] string Password,
     [MinLength(3)] string Username,
-    string Display,
+    string DisplayName,
     DateTimeOffset Birthday
 );

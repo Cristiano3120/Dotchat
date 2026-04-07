@@ -2,5 +2,5 @@
 
 public interface IHashingService
 {
-    public string Hash(string data);
+    public string Hash(string input);
 }

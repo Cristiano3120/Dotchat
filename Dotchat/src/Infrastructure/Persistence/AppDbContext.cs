@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DotchatServer.src.Infrastructure.Persistence;
 
-public sealed class AppDbContext : DbContext
+public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<ApplicationUser> Users { get; set; }
 
@@ -16,8 +16,6 @@ public sealed class AppDbContext : DbContext
             _ = x.HasIndex(x => x.Email).IsUnique();
             _ = x.HasIndex(x => x.Username).IsUnique();
             _ = x.HasKey(x => x.Id);
-            
         });
     }
 }
-

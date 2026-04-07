@@ -1,8 +1,9 @@
 ﻿using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Core.Entities;
-using DotchatServer.src.Core.Enums;
+using DotchatShared.src.Enums;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using System.Diagnostics;
 
 namespace DotchatServer.src.Infrastructure.Persistence.Repos;
 
@@ -22,6 +23,7 @@ public sealed class AuthRepository(AppDbContext dbContext) : IAuthRepository
     /// is already taken, if the database is unavailable, or if an unknown error occurs.</returns>
     public async Task<RegisterErrorType> CreateUserAsync(ApplicationUser applicationUser)
     {
+        Stopwatch stopwatch = Stopwatch.StartNew();
         try
         {
             _ = await _users.AddAsync(applicationUser);
@@ -58,6 +60,10 @@ public sealed class AuthRepository(AppDbContext dbContext) : IAuthRepository
         {
             //TODO: log
             return RegisterErrorType.Unknown;
+        }
+        finally
+        {
+            Console.WriteLine($"Query took: {stopwatch.ElapsedMilliseconds}ms");
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using DotchatServer.src.Application.DTOs;
+using DotchatServer.src.Application.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -13,7 +14,7 @@ namespace DotchatServer.src.Application.Services;
 /// <remarks>This service is typically used to issue JWTs that can be consumed by clients for secure API access.
 /// The generated tokens include standard claims such as subject, email, and a unique identifier.</remarks>
 /// <param name="jwtSettings">The settings used to configure JWT generation, including the signing key, issuer, audience, and token expiration.</param>
-public sealed class JwtService(JwtSettings jwtSettings)
+internal sealed class JwtService(JwtSettings jwtSettings) : IJwtService
 {
     /// <summary>
     /// Generates a JSON Web Token (JWT) for the specified user with the provided email address.

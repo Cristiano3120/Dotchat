@@ -1,4 +1,4 @@
-﻿using DotchatServer.src.Core.Enums;
+﻿using DotchatShared.src.Enums;
 using OneOf;
 
 namespace DotchatServer.src.Application.DTOs;
@@ -18,6 +18,6 @@ public partial class RegisterResult : OneOfBase<RegisterResponse, RegisterError>
     public static implicit operator RegisterResult(RegisterError _) => new(_);
 }
 
-public sealed record RegisterResponse(string AccessToken, string RefreshToken, int ExpiresIn);
+public sealed record RegisterResponse(JwtClientData JwtClientData);
 
-public sealed record RegisterError(RegisterErrorType Type, string Message);
+public sealed record RegisterError(RegisterErrorType Type);
