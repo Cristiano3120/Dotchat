@@ -1,4 +1,5 @@
-﻿using DotchatServer.src.Application.Interfaces;
+﻿using DotchatServer.src.Application.Extensions;
+using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Infrastructure.Persistence;
 using DotchatServer.src.Infrastructure.Persistence.Repos;
 using Microsoft.EntityFrameworkCore;
@@ -24,8 +25,8 @@ public static class InfrastructureServiceExtensions
             return ConnectionMultiplexer.Connect(conf);
         });
 
-        _ = services.AddDbContextPool<AppDbContext>(opt => opt.UseNpgsql(
-            connectionString: configuration.GetConnectionString("PostgreSQL")));                   
+        _ = services.AddDbContextPoolWithWarmup<AppDbContext, DbContextWarmupUtility>(
+            opt => opt.UseNpgsql(connectionString: configuration.GetConnectionString("PostgreSQL")));
 
         _ = services.AddScoped<IAuthRepository, AuthRepository>();
     }

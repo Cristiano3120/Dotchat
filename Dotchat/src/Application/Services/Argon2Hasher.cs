@@ -1,9 +1,11 @@
-﻿using DotchatServer.src.Application.Interfaces.Security;
+﻿using DotchatServer.src.Application.Interfaces;
+using DotchatServer.src.Application.Interfaces.Security;
 using Isopoh.Cryptography.Argon2;
+using System.Diagnostics;
 
 namespace DotchatServer.src.Application.Services;
 
-internal sealed class Argon2Hasher : IHashingService
+internal sealed class Argon2Hasher : IHashingService, IWarmable
 {
     public string Hash(string input)
         => Argon2.Hash
@@ -15,4 +17,20 @@ internal sealed class Argon2Hasher : IHashingService
             type: Argon2Type.HybridAddressing,
             hashLength: 32 //Length of the resulting hash in bytes 
         );
+
+    public Task WarmupAsync()
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            string password = $"password{i}";
+
+            string hash = Hash(password);
+            stopwatch.Stop();
+
+            Console.WriteLine($"Password: {password}, Hash: {hash}, Time taken: {stopwatch.ElapsedMilliseconds} ms");
+        }
+
+        return Task.CompletedTask;
+    }
 }

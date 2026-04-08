@@ -1,6 +1,7 @@
-using DotchatServer.src.Application;
 using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.Enums;
+using DotchatServer.src.Application.Extensions;
+using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Application.Interfaces.Security;
 using DotchatServer.src.Application.Services;
 using DotchatServer.src.Constants;
@@ -84,13 +85,11 @@ public static class Program
         _ = app.UseAuthentication();  
         _ = app.UseAuthorization();
         _ = app.MapControllers();
-        var h = app.Services.GetRequiredKeyedService<IHashingService>(HashingAlgorithm.Argon2);
-        for (int i = 0; i < 1000; i++)
-        {
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            h.Hash("asdfzuhabfszuiasbfauzhsbf");
-            Console.WriteLine(stopwatch.ElapsedMilliseconds);
-        }
+
+        //Warmup every service that implements IWarmable. Hashing Services are an example for this
+        IEnumerable<IWarmable> warmables = app.Services.GetServices<IWarmable>();
+        await Task.WhenAll(warmables.Select(w => w.WarmupAsync()));
+
         await app.RunAsync(app.Configuration.GetConnectionString("WebAdress"));
     }
 }

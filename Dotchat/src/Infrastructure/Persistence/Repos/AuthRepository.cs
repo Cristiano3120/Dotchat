@@ -1,4 +1,6 @@
-﻿using DotchatServer.src.Application.Interfaces;
+﻿using DotchatServer.src.Application.Enums;
+using DotchatServer.src.Application.Interfaces;
+using DotchatServer.src.Application.Interfaces.Security;
 using DotchatServer.src.Core.Entities;
 using DotchatShared.src.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +9,9 @@ using System.Diagnostics;
 
 namespace DotchatServer.src.Infrastructure.Persistence.Repos;
 
-public sealed class AuthRepository(AppDbContext dbContext) : IAuthRepository
+public sealed class AuthRepository(
+    [FromKeyedServices(HashingAlgorithm.Argon2)] IHashingService hashingService, 
+    AppDbContext dbContext) : IAuthRepository
 {
     private readonly DbSet<ApplicationUser> _users = dbContext.Users;
 
@@ -26,6 +30,24 @@ public sealed class AuthRepository(AppDbContext dbContext) : IAuthRepository
         Stopwatch stopwatch = Stopwatch.StartNew();
         try
         {
+            bool usernameTaken = await _users.AnyAsync(x => x.Username == applicationUser.Username);
+            if (usernameTaken)
+            {
+                return RegisterErrorType.UsernameTaken;
+            }
+
+            bool emailTaken = await _users.AnyAsync(x => x.Email == applicationUser.Email);
+            if (emailTaken)
+            {
+                return RegisterErrorType.EmailTaken;
+            }
+
+            // Hash the password after confirming the username and email are unique to avoid unnecessary hashing work in case of duplicates.
+            applicationUser = applicationUser with
+            {
+                PasswordHash = hashingService.Hash(applicationUser.PasswordHash)
+            };
+
             _ = await _users.AddAsync(applicationUser);
             if (await dbContext.SaveChangesAsync() > 0)
             {

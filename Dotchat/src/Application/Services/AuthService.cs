@@ -1,23 +1,20 @@
 ﻿using DotchatServer.src.Application.DTOs;
-using DotchatServer.src.Application.Enums;
 using DotchatServer.src.Application.Interfaces;
-using DotchatServer.src.Application.Interfaces.Security;
 using DotchatServer.src.Core.Entities;
 using DotchatShared.src.DTOs.AuthRequests;
 using DotchatShared.src.Enums;
-using System.Diagnostics;
 
 namespace DotchatServer.src.Application.Services;
 
 public sealed class AuthService(
-    [FromKeyedServices(HashingAlgorithm.Argon2)] IHashingService hashingService,
     SnowflakeGenerator snowflakeGenerator,
     IAuthRepository authRepository,
     IJwtService jwtService)
 {
     public async Task<RegisterResult> RegisterAsync(RegisterRequest registerRequest)
     {
-        Stopwatch stopwatch = Stopwatch.StartNew();
+        //Dont hash password yet, we will do it in the repository.
+        //Doing it here would be expensive if the email or username is already taken
         ApplicationUser applicationUser = new()
         {
             Id = snowflakeGenerator.NextId(),
@@ -25,9 +22,8 @@ public sealed class AuthService(
             Birthday = registerRequest.Birthday,
             DisplayName = registerRequest.DisplayName,
             Email = registerRequest.Email,
-            PasswordHash = hashingService.Hash(registerRequest.Password)
+            PasswordHash = registerRequest.Password
         };
-        Console.WriteLine($"Hashing took: {stopwatch.ElapsedMilliseconds}ms");
 
         return await authRepository.CreateUserAsync(applicationUser) switch
         {
