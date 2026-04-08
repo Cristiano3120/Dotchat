@@ -1,9 +1,7 @@
+using Destructurama;
 using DotchatServer.src.Application.DTOs;
-using DotchatServer.src.Application.Enums;
 using DotchatServer.src.Application.Extensions;
 using DotchatServer.src.Application.Interfaces;
-using DotchatServer.src.Application.Interfaces.Security;
-using DotchatServer.src.Application.Services;
 using DotchatServer.src.Constants;
 using DotchatServer.src.Infrastructure;
 using DotNetEnv;
@@ -11,8 +9,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using RedisRateLimiting;
+using Serilog;
+using Serilog.Events;
 using StackExchange.Redis;
-using System.Diagnostics;
 using System.Text;
 
 namespace DotchatServer.src;
@@ -21,6 +20,15 @@ public static class Program
 {
     public static async Task Main()
     {
+        Log.Logger = new LoggerConfiguration()
+           .Enrich.FromLogContext()
+           .Destructure.UsingAttributes()
+           .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {NewLine}{Exception}")
+           .MinimumLevel.Information()
+           .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+           .MinimumLevel.Override("System", LogEventLevel.Warning)
+           .CreateLogger();
+
         WebApplicationBuilder builder = WebApplication.CreateBuilder();
         IEnumerable<KeyValuePair<string, string>> envVals = Env.Load();
 
@@ -82,7 +90,7 @@ public static class Program
         _ = app.MapOpenApi();
         _ = app.UseRateLimiter();
         _ = app.UseRouting();
-        _ = app.UseAuthentication();  
+        _ = app.UseAuthentication();
         _ = app.UseAuthorization();
         _ = app.MapControllers();
 

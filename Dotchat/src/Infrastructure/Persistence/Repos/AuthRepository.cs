@@ -5,6 +5,7 @@ using DotchatServer.src.Core.Entities;
 using DotchatShared.src.Enums;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Serilog;
 using System.Diagnostics;
 
 namespace DotchatServer.src.Infrastructure.Persistence.Repos;
@@ -27,18 +28,19 @@ public sealed class AuthRepository(
     /// is already taken, if the database is unavailable, or if an unknown error occurs.</returns>
     public async Task<RegisterErrorType> CreateUserAsync(ApplicationUser applicationUser)
     {
-        Stopwatch stopwatch = Stopwatch.StartNew();
         try
         {
             bool usernameTaken = await _users.AnyAsync(x => x.Username == applicationUser.Username);
             if (usernameTaken)
             {
+                Log.Information("Username {Username} was already taken", applicationUser.Username);
                 return RegisterErrorType.UsernameTaken;
             }
 
             bool emailTaken = await _users.AnyAsync(x => x.Email == applicationUser.Email);
             if (emailTaken)
             {
+                Log.Information("Email {Email} was already taken", applicationUser.Email);
                 return RegisterErrorType.EmailTaken;
             }
 
@@ -51,10 +53,11 @@ public sealed class AuthRepository(
             _ = await _users.AddAsync(applicationUser);
             if (await dbContext.SaveChangesAsync() > 0)
             {
+                Log.Information("User added successfully: {@User}", applicationUser);
                 return RegisterErrorType.None;
             }
 
-            //TODO: Log
+            Log.Error("Failed to create user for unknown reasons. No exceptions were thrown, but the database operation did not succeed.");
             return RegisterErrorType.Unknown;
         }
         catch (DbUpdateException dbUpdateEx)
@@ -63,6 +66,8 @@ public sealed class AuthRepository(
                 && pgEx.SqlState == PostgresErrorCodes.UniqueViolation)
             {
                 string? fieldName = GetFieldNameFromConstraint(pgEx.ConstraintName);
+                Log.Error(dbUpdateEx, "Unique constraint violation occurred while creating user. Constraint: {ConstraintName}, Parsed Field: {FieldName}", pgEx.ConstraintName, fieldName);
+                
                 return fieldName switch
                 {
                     nameof(ApplicationUser.Username) => RegisterErrorType.UsernameTaken,
@@ -71,21 +76,18 @@ public sealed class AuthRepository(
                 };
             }
 
+            Log.Error(dbUpdateEx, "An unexpected error occurred while creating user.");
             return RegisterErrorType.Unknown;
         }
         catch (NpgsqlException ex)
         {
-            //TODO: log
+            Log.Error(ex, "Database error occurred while creating user.");
             return RegisterErrorType.DbUnavailable;
         }
         catch (Exception ex)
         {
-            //TODO: log
+            Log.Error(ex, "An unexpected error occurred while creating user.");
             return RegisterErrorType.Unknown;
-        }
-        finally
-        {
-            Console.WriteLine($"Query took: {stopwatch.ElapsedMilliseconds}ms");
         }
     }
 

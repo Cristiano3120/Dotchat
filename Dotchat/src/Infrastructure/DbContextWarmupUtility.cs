@@ -1,6 +1,7 @@
 ﻿using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace DotchatServer.src.Infrastructure;
 
@@ -13,16 +14,16 @@ public sealed class DbContextWarmupUtility(IServiceProvider serviceProvider) : I
 
         try
         {
-            Console.WriteLine("DB Warmup start");
+            Log.Information("DB Warmup start");
 
             _ = await dbContext.Users.AsNoTracking().AnyAsync(x => x.Username == "warmup");
             _ = await dbContext.Users.AsNoTracking().AnyAsync(x => x.Email == "warmup@warmup.com");
 
-            Console.WriteLine("DB Warmup successful");
+            Log.Information("DB Warmup successful");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"DB Warmup failed: {ex.Message}");
+            Log.Error(ex, "DB Warmup failed:");
         }
     }
 }

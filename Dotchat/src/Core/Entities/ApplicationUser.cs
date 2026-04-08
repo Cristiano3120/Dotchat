@@ -1,4 +1,5 @@
-﻿using DotchatServer.src.Application.Services;
+﻿using Destructurama.Attributed;
+using DotchatServer.src.Application.Services;
 
 namespace DotchatServer.src.Core.Entities;
 
@@ -14,6 +15,7 @@ public sealed record ApplicationUser
     public string? Bio { get; init; }
 
     // ── Security ────────────────────────────────────────────────────
+    [LogMasked]
     public string PasswordHash { get; init; } = string.Empty;
 
     // ── TIMESTAMPS ────────────────────────────────────────────────

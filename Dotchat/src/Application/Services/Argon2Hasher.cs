@@ -1,6 +1,7 @@
 ﻿using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Application.Interfaces.Security;
 using Isopoh.Cryptography.Argon2;
+using Serilog;
 using System.Diagnostics;
 
 namespace DotchatServer.src.Application.Services;
@@ -23,12 +24,10 @@ internal sealed class Argon2Hasher : IHashingService, IWarmable
         for (int i = 0; i < 10; i++)
         {
             Stopwatch stopwatch = Stopwatch.StartNew();
-            string password = $"password{i}";
-
-            string hash = Hash(password);
+            _ = Hash($"password{i}");
             stopwatch.Stop();
 
-            Console.WriteLine($"Password: {password}, Hash: {hash}, Time taken: {stopwatch.ElapsedMilliseconds} ms");
+            Log.Information("{Algorithm} hash generated in {ElapsedMs}ms", "Argon2", stopwatch.ElapsedMilliseconds);
         }
 
         return Task.CompletedTask;
