@@ -1,8 +1,10 @@
 ﻿using DotchatServer.src.Application.Extensions;
 using DotchatServer.src.Application.Interfaces;
+using DotchatServer.src.Core.Interfaces;
 using DotchatServer.src.Infrastructure.Persistence;
 using DotchatServer.src.Infrastructure.Persistence.Repos;
 using Microsoft.EntityFrameworkCore;
+using RazorEngineCore;
 using StackExchange.Redis;
 
 namespace DotchatServer.src.Infrastructure;
@@ -24,6 +26,10 @@ public static class InfrastructureServiceExtensions
 
             return ConnectionMultiplexer.Connect(conf);
         });
+
+        _ = services.AddSingleton<IRazorEngine, RazorEngine>();
+        _ = services.AddSingleton<IEmailFactory, EmailFactory>();
+        _ = services.AddSingleton<IEmailClient, EmailClient>();
 
         _ = services.AddDbContextPoolWithWarmup<AppDbContext, DbContextWarmupUtility>(
             opt => opt.UseNpgsql(connectionString: configuration.GetConnectionString("PostgreSQL")));

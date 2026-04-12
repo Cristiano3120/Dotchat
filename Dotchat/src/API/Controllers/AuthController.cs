@@ -4,7 +4,7 @@ using DotchatServer.src.Constants;
 using DotchatShared.src.Constants;
 using DotchatShared.src.DTOs.AuthRequests;
 using DotchatShared.src.Enums;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Net;
@@ -19,6 +19,7 @@ public sealed class AuthController(AuthService authService) : ControllerBase
     [HttpPost(Endpoints.AuthEndpoints.Login)]
     public async Task<IActionResult> LoginAsync([FromBody] LoginRequest loginRequest)
     {
+       
         return Ok();
     }
 
@@ -35,5 +36,18 @@ public sealed class AuthController(AuthService authService) : ControllerBase
                 _ => StatusCode((int)HttpStatusCode.InternalServerError, error)
             }
         );
+    }
+
+    [Authorize]
+    [HttpGet(Endpoints.AuthEndpoints.RequestVerification)]
+    public async Task<IActionResult> RequestVerificationAsync([FromBody] int userID)
+    {
+        return Ok();
+    }
+
+    [HttpGet(Endpoints.AuthEndpoints.Verify)]
+    public async Task<IActionResult> VerifyAsync([FromQuery] int userID, [FromQuery] string token)
+    {
+        return Ok(); //look at linear issue
     }
 }

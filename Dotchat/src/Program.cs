@@ -1,9 +1,12 @@
 using Destructurama;
 using DotchatServer.src.Application.DTOs;
+using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Application.Extensions;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Constants;
+using DotchatServer.src.Core.Extensions;
 using DotchatServer.src.Infrastructure;
+using DotchatShared.src.Enums;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -76,7 +79,7 @@ public static class Program
 
         _ = builder.Services.AddAuthorization();
 
-
+        _ = builder.Services.AddCoreServices();
         builder.Services.AddInfrastructureServices(envVals, configuration: builder.Configuration);
         builder.Services.AddApplicationServices(jwtSettings, workerID: builder.Configuration.GetValue<int>("WorkerID"));
 

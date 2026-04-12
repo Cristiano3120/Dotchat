@@ -1,6 +1,7 @@
 ﻿using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Core.Entities;
+using DotchatServer.src.Core.Interfaces;
 using DotchatShared.src.DTOs.AuthRequests;
 using DotchatShared.src.Enums;
 
@@ -9,6 +10,7 @@ namespace DotchatServer.src.Application.Services;
 public sealed class AuthService(
     SnowflakeGenerator snowflakeGenerator,
     IAuthRepository authRepository,
+    IEmailClient emailClient,
     IJwtService jwtService)
 {
     public async Task<RegisterResult> RegisterAsync(RegisterRequest registerRequest)
@@ -34,5 +36,16 @@ public sealed class AuthService(
             RegisterErrorType.None => new RegisterResponse(jwtService.GenerateToken(userId: applicationUser.Id, email: applicationUser.Email)),
             _ => throw new NotImplementedException()
         };
+    }
+
+    public async Task RequestVerification(int userID)
+    {
+        string token = Guid.NewGuid().ToString();
+        //Email Factory RazorEngineCore
+    }
+
+    public async Task VerifyAsync(int userID, string token)
+    {
+
     }
 }

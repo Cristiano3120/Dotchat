@@ -1,0 +1,88 @@
+﻿<!DOCTYPE html>
+<html lang="@Model.Language">
+<head>
+    <meta charset="UTF-8">
+    <title>Bitte bestätige deine E-Mail-Adresse</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f4f4; font-family:Arial, sans-serif;">
+
+    <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+
+                <table width="600" cellpadding="0" cellspacing="0"
+                       style="background-color:#ffffff; border-radius:8px; overflow:hidden;">
+
+                    <!-- Header -->
+                    <tr>
+                        <td style="background-color:#4F46E5; padding:32px; text-align:center;">
+                            <h1 style="color:#ffffff; margin:0; font-size:24px;">@Model.AppName</h1>
+                        </td>
+                    </tr>
+
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding:40px 48px;">
+                            <p style="font-size:16px; color:#111827; margin:0 0 16px;">
+                                Hallo @Model.Name,
+                            </p>
+                            <p style="font-size:16px; color:#374151; margin:0 0 32px;">
+                                danke für deine Registrierung! Bitte bestätige deine
+                                E-Mail-Adresse, indem du auf den Button klickst.
+                            </p>
+
+                            <!-- Button -->
+                            <table cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td align="center">
+                                        <a href="@Model.ConfirmUrl"
+                                               style="display:inline-block;
+                                            background-color:#4F46E5;
+                                            color:#ffffff;
+                                            padding:14px 32px;
+                                            border-radius:6px;
+                                            text-decoration:none;
+                                            font-size:16px;
+                                            font-weight:bold;">
+                                            E-Mail bestätigen
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Fallback Link -->
+                            <p style="font-size:13px; color:#6B7280; margin:32px 0 0; text-align:center;">
+                                Button funktioniert nicht? Kopiere diesen Link in deinen Browser:<br />
+                                <a href="@Model.ConfirmUrl" style="color:#4F46E5; word-break:break-all;">
+                                    @Model.ConfirmUrl
+                                </a>
+                            </p>
+
+                            <!-- Expiry Warning -->
+                            <p style="font-size:13px; color:#9CA3AF; margin:24px 0 0; text-align:center;">
+                                Dieser Link ist gültig bis @Model.ExpiresAt.ToString("dd.MM.yyyy HH:mm") Uhr.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color:#F9FAFB; padding:24px 48px; text-align:center;
+                            border-top:1px solid #E5E7EB;">
+                            <p style="font-size:12px; color:#9CA3AF; margin:0;">
+                                Du hast dich nicht registriert? Dann ignoriere diese E-Mail einfach.
+                            </p>
+                            <p style="font-size:12px; color:#9CA3AF; margin:8px 0 0;">
+                                &copy; @DateTime.Now.Year @Model.AppName
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

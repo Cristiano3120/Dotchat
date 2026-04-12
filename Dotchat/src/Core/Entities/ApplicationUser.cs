@@ -17,7 +17,9 @@ public sealed record ApplicationUser
     // ── Security ────────────────────────────────────────────────────
     [LogMasked]
     public string PasswordHash { get; init; } = string.Empty;
+    public bool TwoFactorEnabled { get; init; } = false;
+    public bool EmailVerified { get; init; } = false;
 
     // ── TIMESTAMPS ────────────────────────────────────────────────
-    public DateTimeOffset CreatedAt => SnowflakeGenerator.GetCreationTime(Id); //TODO: Issue #12
+    public DateTimeOffset CreatedAt => SnowflakeGenerator.GetCreationTime(Id);
 }
