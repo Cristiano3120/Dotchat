@@ -38,7 +38,7 @@ public sealed class AuthService(
         };
     }
 
-    public async Task RequestVerification(int userID)
+    public async Task RequestVerificationAsync(int userID)
     {
         string token = Guid.NewGuid().ToString();
         //Email Factory RazorEngineCore

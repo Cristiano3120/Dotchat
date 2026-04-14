@@ -4,6 +4,6 @@ public static class Templates
 {
     public static class EmailTemplates
     {
-        public const string VerificationEmail = "VerificationEmail";
+        public const string VerificationEmail = "VerificationEmailTemplate";
     }
 }

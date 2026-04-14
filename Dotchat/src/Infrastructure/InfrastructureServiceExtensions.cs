@@ -30,6 +30,7 @@ public static class InfrastructureServiceExtensions
         _ = services.AddSingleton<IRazorEngine, RazorEngine>();
         _ = services.AddSingleton<IEmailFactory, EmailFactory>();
         _ = services.AddSingleton<IEmailClient, EmailClient>();
+        _ = services.AddSingleton<AppPath>(provider => AppPath.From(provider.GetRequiredService<IWebHostEnvironment>()));
 
         _ = services.AddDbContextPoolWithWarmup<AppDbContext, DbContextWarmupUtility>(
             opt => opt.UseNpgsql(connectionString: configuration.GetConnectionString("PostgreSQL")));

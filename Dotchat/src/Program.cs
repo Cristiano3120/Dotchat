@@ -1,3 +1,4 @@
+using AspNetCoreGeneratedDocument;
 using Destructurama;
 using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.DTOs.EmailModels;
@@ -100,7 +101,7 @@ public static class Program
         //Warmup every service that implements IWarmable. Hashing Services are an example for this
         IEnumerable<IWarmable> warmables = app.Services.GetServices<IWarmable>();
         await Task.WhenAll(warmables.Select(w => w.WarmupAsync()));
-
+        
         await app.RunAsync(app.Configuration.GetConnectionString("WebAdress"));
     }
 }

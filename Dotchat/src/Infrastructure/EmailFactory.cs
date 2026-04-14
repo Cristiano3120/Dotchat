@@ -1,27 +1,60 @@
-﻿using DotchatServer.src.Application.DTOs.EmailModels;
-using DotchatServer.src.Application.DTOs.Emails;
+﻿using DotchatServer.src.Application.DTOs.Emails;
 using DotchatServer.src.Application.Interfaces;
+using DotchatServer.src.Core.Interfaces;
 using DotchatShared.src.Enums;
-using Microsoft.AspNetCore.Razor.Language;
 using RazorEngineCore;
+using System.Collections.Concurrent;
 
 namespace DotchatServer.src.Infrastructure;
 
-public sealed class EmailFactory(IRazorEngine razorEngine) : IEmailFactory
+public sealed class EmailFactory(IRazorEngine razorEngine, AppPath appPath) : IEmailFactory
 {
+    private readonly ConcurrentDictionary<string, object> _templateCaches = new();
+    private readonly ConcurrentDictionary<string, DateTime> _lastCacheUpdates = new();
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
+
     public async Task<Email> CreateAsync<TModel>(string templateName, TModel model, Language language)
+        where TModel : IEmailTemplateNecessities
     {
-        //TODO: Rework VerificationEmailModel/Template
-        string templatePath = $"EmailTemplates/{language}/{templateName}.cshtml"; //Hardcoded for now | TODO: DONT HARDCODE
-        string templateContent = await File.ReadAllTextAsync("C:\\Users\\Crist\\source\\repos\\DotchatServer\\Dotchat\\src\\EmailTemplates\\De\\VerificationEmailTemplate.cshtml"); //CHANGE THIS
+        string cacheKey = $"{language}_{templateName}";
+        string templatePath = appPath.Src().Go("EmailTemplates").Go(language.ToString()).File($"{templateName}.cshtml");
 
-        IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>> template = await razorEngine.CompileAsync<RazorEngineTemplateBase<TModel>>(
-        templateContent, builder =>
+        SemaphoreSlim semaphore = _locks.GetOrAdd(cacheKey, _ => new SemaphoreSlim(1, 1));
+
+        DateTime lastWriteTime = File.GetLastWriteTimeUtc(templatePath);
+        bool cacheValid = _lastCacheUpdates.TryGetValue(cacheKey, out DateTime cachedTime) && cachedTime >= lastWriteTime;
+
+        if (!cacheValid)
         {
-            builder.AddUsing("System");
-        });
+            await semaphore.WaitAsync();
+            try
+            {
+                // Double-check after lock
+                lastWriteTime = File.GetLastWriteTimeUtc(templatePath);
+                cacheValid = _lastCacheUpdates.TryGetValue(cacheKey, out cachedTime) && cachedTime >= lastWriteTime;
 
-        string htmlBody = await template.RunAsync(instance => instance.Model = model); //Maybe cache the compiled template for better performance?
-        return new Email(templateName, htmlBody);
+                if (!cacheValid)
+                {
+                    string templateContent = await File.ReadAllTextAsync(templatePath);
+                    IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>> compiled = await razorEngine.CompileAsync<RazorEngineTemplateBase<TModel>>(
+                        templateContent, builder =>
+                        {
+                            builder.AddUsing("System");
+                        });
+
+                    _templateCaches[cacheKey] = compiled;
+                    _lastCacheUpdates[cacheKey] = DateTime.UtcNow;
+                }
+            }
+            finally
+            {
+                _ = semaphore.Release();
+            }
+        }
+
+        IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>> template = (IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>>)_templateCaches[cacheKey];
+        string htmlBody = await template.RunAsync(instance => instance.Model = model);
+
+        return new Email(model.Subject, htmlBody);
     }
 }
