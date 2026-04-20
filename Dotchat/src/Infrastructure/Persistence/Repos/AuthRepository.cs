@@ -2,16 +2,19 @@
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Application.Interfaces.Security;
 using DotchatServer.src.Core.Entities;
+
 using DotchatShared.src.Enums;
+
 using Microsoft.EntityFrameworkCore;
+
 using Npgsql;
+
 using Serilog;
-using System.Diagnostics;
 
 namespace DotchatServer.src.Infrastructure.Persistence.Repos;
 
 public sealed class AuthRepository(
-    [FromKeyedServices(HashingAlgorithm.Argon2)] IHashingService hashingService, 
+    [FromKeyedServices(HashingAlgorithm.Argon2)] IHashingService hashingService,
     AppDbContext dbContext) : IAuthRepository
 {
     private readonly DbSet<ApplicationUser> _users = dbContext.Users;
@@ -67,7 +70,7 @@ public sealed class AuthRepository(
             {
                 string? fieldName = GetFieldNameFromConstraint(pgEx.ConstraintName);
                 Log.Error(dbUpdateEx, "Unique constraint violation occurred while creating user. Constraint: {ConstraintName}, Parsed Field: {FieldName}", pgEx.ConstraintName, fieldName);
-                
+
                 return fieldName switch
                 {
                     nameof(ApplicationUser.Username) => RegisterErrorType.UsernameTaken,

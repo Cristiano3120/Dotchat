@@ -2,6 +2,7 @@
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Core.Entities;
 using DotchatServer.src.Core.Interfaces;
+
 using DotchatShared.src.DTOs.AuthRequests;
 using DotchatShared.src.Enums;
 

@@ -1,6 +1,8 @@
 ﻿using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Infrastructure.Persistence;
+
 using Microsoft.EntityFrameworkCore;
+
 using Serilog;
 
 namespace DotchatServer.src.Infrastructure;

@@ -1,4 +1,5 @@
 ﻿using DotchatServer.src.Core.Entities;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace DotchatServer.src.Infrastructure.Persistence;

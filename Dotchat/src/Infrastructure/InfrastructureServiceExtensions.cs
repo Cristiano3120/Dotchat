@@ -1,17 +1,21 @@
-﻿using DotchatServer.src.Application.Extensions;
+﻿using DotchatServer.src.Application.DTOs.EmailModels;
+using DotchatServer.src.Application.Extensions;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Core.Interfaces;
 using DotchatServer.src.Infrastructure.Persistence;
 using DotchatServer.src.Infrastructure.Persistence.Repos;
+
 using Microsoft.EntityFrameworkCore;
+
 using RazorEngineCore;
+
 using StackExchange.Redis;
 
 namespace DotchatServer.src.Infrastructure;
 
 public static class InfrastructureServiceExtensions
 {
-    public static void AddInfrastructureServices(this IServiceCollection services, 
+    public static void AddInfrastructureServices(this IServiceCollection services,
         IEnumerable<KeyValuePair<string, string>> envVals,
         IConfiguration configuration)
     {
@@ -29,7 +33,7 @@ public static class InfrastructureServiceExtensions
 
         _ = services.AddSingleton<IRazorEngine, RazorEngine>();
         _ = services.AddSingleton<IEmailFactory, EmailFactory>();
-        _ = services.AddSingleton<IEmailClient, EmailClient>();
+        _ = services.AddSingleton<IEmailClient, EmailClient>(services => new EmailClient(configuration.GetSection("EmailSettings").Get<EmailOptions>()!));
         _ = services.AddSingleton<AppPath>(provider => AppPath.From(provider.GetRequiredService<IWebHostEnvironment>()));
 
         _ = services.AddDbContextPoolWithWarmup<AppDbContext, DbContextWarmupUtility>(

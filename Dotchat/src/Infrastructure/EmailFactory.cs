@@ -1,9 +1,12 @@
-﻿using DotchatServer.src.Application.DTOs.Emails;
+﻿using System.Collections.Concurrent;
+
+using DotchatServer.src.Application.DTOs.Emails;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Core.Interfaces;
+
 using DotchatShared.src.Enums;
+
 using RazorEngineCore;
-using System.Collections.Concurrent;
 
 namespace DotchatServer.src.Infrastructure;
 

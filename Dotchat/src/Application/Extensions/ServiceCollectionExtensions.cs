@@ -1,6 +1,8 @@
-﻿using DotchatServer.src.Application.Interfaces;
+﻿using System.Diagnostics.CodeAnalysis;
+
+using DotchatServer.src.Application.Interfaces;
+
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics.CodeAnalysis;
 
 namespace DotchatServer.src.Application.Extensions;
 
@@ -12,7 +14,7 @@ public static class ServiceCollectionExtensions
     {
         _ = services.AddKeyedSingleton<TInterface, TImplementation>(key);
         _ = services.AddSingleton<IWarmable>(sp => (sp.GetRequiredKeyedService<TInterface>(key) as IWarmable)!);
-        
+
         return services;
     }
 

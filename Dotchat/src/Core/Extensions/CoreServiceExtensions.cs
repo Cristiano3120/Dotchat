@@ -1,6 +1,4 @@
-﻿using DotchatServer.src.Core.Interfaces;
-
-namespace DotchatServer.src.Core.Extensions;
+﻿namespace DotchatServer.src.Core.Extensions;
 
 public static class CoreServiceExtensions
 {

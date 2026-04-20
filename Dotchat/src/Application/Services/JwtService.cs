@@ -1,10 +1,12 @@
-﻿using DotchatServer.src.Application.DTOs;
-using DotchatServer.src.Application.Interfaces;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+
+using DotchatServer.src.Application.DTOs;
+using DotchatServer.src.Application.Interfaces;
+
+using Microsoft.IdentityModel.Tokens;
 
 namespace DotchatServer.src.Application.Services;
 
@@ -48,7 +50,7 @@ internal sealed class JwtService(JwtSettings jwtSettings) : IJwtService
         (
             AccessToken: new JwtSecurityTokenHandler().WriteToken(token),
             RefreshToken: GenerateRefreshToken(),
-            Expiery : TimeSpan.FromMinutes(jwtSettings.Expiery)
+            Expiery: TimeSpan.FromMinutes(jwtSettings.Expiery)
         );
     }
 

@@ -1,16 +1,11 @@
-﻿using BenchmarkDotNet.Attributes;
-using DotchatServer.src.Application.DTOs.Emails;
-using EnvDTE;
-using Microsoft.AspNetCore.Razor.Language;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.VSDiagnostics;
-using RazorEngineCore;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using BenchmarkDotNet.Attributes;
+using Microsoft.VSDiagnostics;
+using RazorEngineCore;
 using RazorEngine = RazorEngineCore.RazorEngine;
 
 namespace DotchatBenchmark;
@@ -34,7 +29,7 @@ public class Benchmarks
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = [];
 
     [GlobalSetup]
-    public void Setup() 
+    public void Setup()
     {
         _razorEngine = new RazorEngine();
         string templateContent = File.ReadAllText("C:\\Users\\Crist\\source\\repos\\DotchatServer\\Dotchat\\src\\EmailTemplates\\De\\VerificationEmailTemplate.cshtml"); //CHANGE THIS

@@ -5,7 +5,7 @@ public sealed class AppPath
     private string _currentAppPath;
     private readonly string _root;
 
-    private AppPath(string root) 
+    private AppPath(string root)
     {
         _currentAppPath = root;
         _root = root;

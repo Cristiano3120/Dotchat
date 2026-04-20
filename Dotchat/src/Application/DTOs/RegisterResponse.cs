@@ -1,4 +1,5 @@
 ﻿using DotchatShared.src.Enums;
+
 using OneOf;
 
 namespace DotchatServer.src.Application.DTOs;
@@ -10,7 +11,7 @@ namespace DotchatServer.src.Application.DTOs;
 /// <remarks>This type encapsulates both successful and error outcomes for registration, allowing methods to
 /// return a single result type. Use pattern matching or type checking to determine whether the result is a success or
 /// an error.</remarks>
-public partial class RegisterResult : OneOfBase<RegisterResponse, RegisterError> 
+public partial class RegisterResult : OneOfBase<RegisterResponse, RegisterError>
 {
     private RegisterResult(OneOf<RegisterResponse, RegisterError> _) : base(_) { }
 

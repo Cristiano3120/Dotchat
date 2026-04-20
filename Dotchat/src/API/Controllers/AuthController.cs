@@ -1,13 +1,16 @@
-﻿using DotchatServer.src.Application.DTOs;
+﻿using System.Net;
+
+using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.Services;
 using DotchatServer.src.Constants;
+
 using DotchatShared.src.Constants;
 using DotchatShared.src.DTOs.AuthRequests;
 using DotchatShared.src.Enums;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using System.Net;
 
 namespace DotchatServer.src.API.Controllers;
 
@@ -19,7 +22,7 @@ public sealed class AuthController(AuthService authService) : ControllerBase
     [HttpPost(Endpoints.AuthEndpoints.Login)]
     public async Task<IActionResult> LoginAsync([FromBody] LoginRequest loginRequest)
     {
-       
+
         return Ok();
     }
 

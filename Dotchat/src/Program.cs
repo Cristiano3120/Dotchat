@@ -1,22 +1,25 @@
-using AspNetCoreGeneratedDocument;
+using System.Text;
+
 using Destructurama;
+
 using DotchatServer.src.Application.DTOs;
-using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Application.Extensions;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Constants;
 using DotchatServer.src.Core.Extensions;
 using DotchatServer.src.Infrastructure;
-using DotchatShared.src.Enums;
+
 using DotNetEnv;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using RedisRateLimiting;
+
 using Serilog;
 using Serilog.Events;
+
 using StackExchange.Redis;
-using System.Text;
 
 namespace DotchatServer.src;
 
@@ -101,7 +104,7 @@ public static class Program
         //Warmup every service that implements IWarmable. Hashing Services are an example for this
         IEnumerable<IWarmable> warmables = app.Services.GetServices<IWarmable>();
         await Task.WhenAll(warmables.Select(w => w.WarmupAsync()));
-        
+
         await app.RunAsync(app.Configuration.GetConnectionString("WebAdress"));
     }
 }

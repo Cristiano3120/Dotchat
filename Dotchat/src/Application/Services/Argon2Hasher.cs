@@ -1,8 +1,11 @@
-﻿using DotchatServer.src.Application.Interfaces;
+﻿using System.Diagnostics;
+
+using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Application.Interfaces.Security;
+
 using Isopoh.Cryptography.Argon2;
+
 using Serilog;
-using System.Diagnostics;
 
 namespace DotchatServer.src.Application.Services;
 

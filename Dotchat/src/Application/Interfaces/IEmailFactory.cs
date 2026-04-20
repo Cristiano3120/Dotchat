@@ -1,7 +1,8 @@
-﻿using DotchatShared.src.Enums;
-using DotchatServer.src.Core.Templates;
-using DotchatServer.src.Application.DTOs.Emails;
+﻿using DotchatServer.src.Application.DTOs.Emails;
 using DotchatServer.src.Core.Interfaces;
+using DotchatServer.src.Core.Templates;
+
+using DotchatShared.src.Enums;
 
 namespace DotchatServer.src.Application.Interfaces;
 
@@ -14,6 +15,6 @@ public interface IEmailFactory
     /// <param name="model"></param>
     /// <param name="language"></param>
     /// <returns></returns>
-    Task<Email> CreateAsync<TModel>(string templateName, TModel model, Language language) 
+    Task<Email> CreateAsync<TModel>(string templateName, TModel model, Language language)
         where TModel : IEmailTemplateNecessities;
 }
