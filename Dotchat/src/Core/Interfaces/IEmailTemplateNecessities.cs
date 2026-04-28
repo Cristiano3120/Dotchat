@@ -2,6 +2,6 @@
 
 public interface IEmailTemplateNecessities
 {
-    string Subject { get; }
+    string Language { get; }
     string AppName { get; }
 }

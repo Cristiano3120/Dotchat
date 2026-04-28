@@ -3,4 +3,5 @@
   <Project Path="DotchatBenchmark/DotchatBenchmark.csproj" />
   <Project Path="DotchatClient/DotchatClient.csproj" Id="bfe2e1ad-a9e5-4bee-aa46-cc804069f256" />
   <Project Path="DotchatShared/DotchatShared.csproj" />
+  <Project Path="IntegrationTests/IntegrationTests.csproj" Id="3b1f82d9-4646-49f0-8113-a5bf9df93caf" />
 </Solution>

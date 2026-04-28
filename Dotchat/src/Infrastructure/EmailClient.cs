@@ -36,8 +36,19 @@ public sealed class EmailClient : IEmailClient
             };
             mimeMessage.To.AddRange(recipients);
 
-            client.Connect(host: _options.Host, port: _options.Port, SecureSocketOptions.StartTls);
-            client.Authenticate(_options.SenderEmail, _appPassword);
+            SecureSocketOptions secureSocketOptions = SecureSocketOptions.StartTls;
+            if (!client.Capabilities.HasFlag(SmtpCapabilities.StartTLS))
+            {
+                Log.Warning("SMTP server does not support STARTTLS. Falling back to Auto for secure socket options. This means that the connection may be unencrypted. Is this intended??????");
+                secureSocketOptions = SecureSocketOptions.Auto;
+            }
+
+            client.Connect(host: _options.Host, port: _options.Port, secureSocketOptions);
+            if (client.Capabilities.HasFlag(SmtpCapabilities.Authentication))
+            {
+                client.Authenticate(_options.SenderEmail, _appPassword);
+            }
+            
             _ = client.Send(mimeMessage);
 
             return true;

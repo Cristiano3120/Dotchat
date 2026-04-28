@@ -33,7 +33,9 @@ public static class InfrastructureServiceExtensions
 
         _ = services.AddSingleton<IRazorEngine, RazorEngine>();
         _ = services.AddSingleton<IEmailFactory, EmailFactory>();
-        _ = services.AddSingleton<IEmailClient, EmailClient>(services => new EmailClient(configuration.GetSection("EmailSettings").Get<EmailOptions>()!));
+        _ = services.AddSingleton<IEmailClient, EmailClient>(services => new EmailClient(configuration.GetValue<bool>("SendEmailToFakeSMPT") 
+            ? configuration.GetSection("EmailSettingsDev").Get<EmailOptions>()! 
+            : configuration.GetSection("EmailSettingsProd").Get<EmailOptions>()!));
         _ = services.AddSingleton<AppPath>(provider => AppPath.From(provider.GetRequiredService<IWebHostEnvironment>()));
 
         _ = services.AddDbContextPoolWithWarmup<AppDbContext, DbContextWarmupUtility>(

@@ -1,19 +1,25 @@
 using System.Text;
 
 using Destructurama;
-
+using DotchatServer.src.Application;
 using DotchatServer.src.Application.DTOs;
+using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Application.Extensions;
 using DotchatServer.src.Application.Interfaces;
+using DotchatServer.src.Application.Services;
 using DotchatServer.src.Constants;
+using DotchatServer.src.Core.Entities;
 using DotchatServer.src.Core.Extensions;
+using DotchatServer.src.Core.Interfaces;
+using DotchatServer.src.Core.Templates;
 using DotchatServer.src.Infrastructure;
-
+using DotchatShared.src.Enums;
 using DotNetEnv;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
+using MimeKit;
 using RedisRateLimiting;
 
 using Serilog;
@@ -86,6 +92,7 @@ public static class Program
         _ = builder.Services.AddCoreServices();
         builder.Services.AddInfrastructureServices(envVals, configuration: builder.Configuration);
         builder.Services.AddApplicationServices(jwtSettings, workerID: builder.Configuration.GetValue<int>("WorkerID"));
+        builder.Services.AddOptions<AppSettings>().Bind(builder.Configuration.GetSection("AppSettings"));
 
         WebApplication app = builder.Build();
 

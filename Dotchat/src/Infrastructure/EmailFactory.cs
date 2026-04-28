@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-
 using DotchatServer.src.Application.DTOs.Emails;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Core.Interfaces;
@@ -10,7 +9,7 @@ using RazorEngineCore;
 
 namespace DotchatServer.src.Infrastructure;
 
-public sealed class EmailFactory(IRazorEngine razorEngine, AppPath appPath) : IEmailFactory
+public sealed partial class EmailFactory(IRazorEngine razorEngine, AppPath appPath) : IEmailFactory
 {
     private readonly ConcurrentDictionary<string, object> _templateCaches = new();
     private readonly ConcurrentDictionary<string, DateTime> _lastCacheUpdates = new();
@@ -58,6 +57,12 @@ public sealed class EmailFactory(IRazorEngine razorEngine, AppPath appPath) : IE
         IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>> template = (IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>>)_templateCaches[cacheKey];
         string htmlBody = await template.RunAsync(instance => instance.Model = model);
 
-        return new Email(model.Subject, htmlBody);
+        return new Email(GetSubject(), htmlBody);
+    }
+
+    private static string GetSubject()
+    {
+        //Get Subject from resx
+        return "Default Subject";
     }
 }

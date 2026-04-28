@@ -42,4 +42,19 @@
     <ProjectReference Include="..\DotchatShared\DotchatShared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="src\EmailTemplates\Subjects\Subjects.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Subjects.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="src\EmailTemplates\Subjects\Subjects.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Subjects.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>
