@@ -1,6 +1,7 @@
 ﻿using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Application.DTOs.Emails;
+using DotchatServer.src.Application.Factories;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Core.Entities;
 using DotchatServer.src.Core.Interfaces;
@@ -8,12 +9,14 @@ using DotchatServer.src.Core.Templates;
 using DotchatShared.src.DTOs.AuthRequests;
 using DotchatShared.src.Enums;
 using MimeKit;
+using StackExchange.Redis;
 
 namespace DotchatServer.src.Application.Services;
 
 public sealed class AuthService(
     VerificationEmailFactory verificationEmailFactory,
     SnowflakeGenerator snowflakeGenerator,
+    IConnectionMultiplexer redisConn,
     IAuthRepository authRepository,
     IEmailFactory emailFactory,
     IEmailClient emailClient,
@@ -46,24 +49,29 @@ public sealed class AuthService(
 
     private async Task<RegisterResponse> CompleteRegistrationAsync(ApplicationUser applicationUser)
     {
-        string token = await PrepVerificationAsync(applicationUser.Id);
         MailboxAddress to = new(name: applicationUser.DisplayName, address: applicationUser.Email);
+        TimeSpan expiery = TimeSpan.FromMinutes(15);
+        string token = await PrepVerificationAsync(applicationUser.Id, expiery);
+
+        VerificationEmailModel verificationEmailModel = 
+            verificationEmailFactory.CreateModel(applicationUser.Username, Language.De, token, expiery);
+
+
         Email email = await emailFactory.CreateAsync<VerificationEmailModel>(
             templateName: Templates.EmailTemplates.VerificationEmail,
-            model: verificationEmailFactory.CreateModel(applicationUser.Username, Language.De, token: token),
+            model: verificationEmailModel,
             language: Language.De
         );
 
-        _ = await emailClient.TrySendEmailAsync(recipients: [to], email);
+        _ = await emailClient.TrySendEmailAsync(recipients: [to], email); //TODO JWT In database speichern
         return new RegisterResponse(jwtService.GenerateToken(userId: applicationUser.Id, email: applicationUser.Email));
     }
 
-    //TODO HIER WEITER MACHEN: Token in DB speichern, damit wir ihn später überprüfen können. Außerdem Ablaufzeit festlegen
-    //TODO: SUBJECT IN TEMPLATE PACKEN
-    private async Task<string> PrepVerificationAsync(long userID)
+    private async Task<string> PrepVerificationAsync(long userID, TimeSpan expiery)
     {
         string token = Guid.NewGuid().ToString();
-        // Additional logic for preparing verification (e.g., saving token to database)
+        _ = await redisConn.GetDatabase().StringSetAsync(key: token, value: userID, expiery);
+
         return token;
     }
 

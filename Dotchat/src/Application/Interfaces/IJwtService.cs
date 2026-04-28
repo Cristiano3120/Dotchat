@@ -1,4 +1,4 @@
-﻿using DotchatServer.src.Application.DTOs;
+﻿using DotchatServer.src.Application.DTOs.JwtModels;
 
 namespace DotchatServer.src.Application.Interfaces;
 

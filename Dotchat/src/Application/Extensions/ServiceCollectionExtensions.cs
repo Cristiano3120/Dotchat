@@ -28,6 +28,15 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    public static IServiceCollection AddSingletonWithWarmup<TImplementation>(this IServiceCollection services)
+        where TImplementation : class
+    {
+        _ = services.AddSingleton<TImplementation>();
+        _ = services.AddSingleton<IWarmable>(sp => (sp.GetRequiredService<TImplementation>() as IWarmable)!);
+
+        return services;
+    }
+
     public static IServiceCollection AddDbContextPoolWithWarmup<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] TContext, WarmupUtility>(this IServiceCollection services, Action<DbContextOptionsBuilder> optionsAction, int poolSize = 1024) where TContext : DbContext
         where WarmupUtility : class, IWarmable
     {

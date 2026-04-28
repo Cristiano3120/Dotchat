@@ -1,4 +1,4 @@
-﻿namespace DotchatServer.src.Application.DTOs;
+﻿namespace DotchatServer.src.Application.DTOs.JwtModels;
 
 /// <summary>
 /// Represents the configuration settings required for issuing and validating JSON Web Tokens (JWT) in authentication

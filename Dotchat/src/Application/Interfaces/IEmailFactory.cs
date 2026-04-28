@@ -17,4 +17,7 @@ public interface IEmailFactory
     /// <returns></returns>
     Task<Email> CreateAsync<TModel>(string templateName, TModel model, Language language)
         where TModel : IEmailTemplateNecessities;
+
+    Task<string> CompileAsync<TModel>(string templateName, Language language)
+        where TModel : IEmailTemplateNecessities;
 }

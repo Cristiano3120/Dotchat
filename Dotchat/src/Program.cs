@@ -1,9 +1,10 @@
+using System.Globalization;
 using System.Text;
 
 using Destructurama;
 using DotchatServer.src.Application;
-using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.DTOs.EmailModels;
+using DotchatServer.src.Application.DTOs.JwtModels;
 using DotchatServer.src.Application.Extensions;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Application.Services;
@@ -91,7 +92,7 @@ public static class Program
 
         _ = builder.Services.AddCoreServices();
         builder.Services.AddInfrastructureServices(envVals, configuration: builder.Configuration);
-        builder.Services.AddApplicationServices(jwtSettings, workerID: builder.Configuration.GetValue<int>("WorkerID"));
+        builder.Services.AddApplicationServices(builder.Environment, jwtSettings, workerID: builder.Configuration.GetValue<int>("WorkerID"));
         builder.Services.AddOptions<AppSettings>().Bind(builder.Configuration.GetSection("AppSettings"));
 
         WebApplication app = builder.Build();

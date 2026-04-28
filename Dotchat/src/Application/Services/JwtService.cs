@@ -2,8 +2,7 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-
-using DotchatServer.src.Application.DTOs;
+using DotchatServer.src.Application.DTOs.JwtModels;
 using DotchatServer.src.Application.Interfaces;
 
 using Microsoft.IdentityModel.Tokens;

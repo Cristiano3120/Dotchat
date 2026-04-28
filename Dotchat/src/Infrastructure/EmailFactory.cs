@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using DotchatServer.src.Application.DTOs.Emails;
 using DotchatServer.src.Application.Interfaces;
+using DotchatServer.src.Application.Services;
 using DotchatServer.src.Core.Interfaces;
 
 using DotchatShared.src.Enums;
@@ -9,13 +10,24 @@ using RazorEngineCore;
 
 namespace DotchatServer.src.Infrastructure;
 
-public sealed partial class EmailFactory(IRazorEngine razorEngine, AppPath appPath) : IEmailFactory
+public sealed partial class EmailFactory(IRazorEngine razorEngine, ResxManager resxManager, AppPath appPath) : IEmailFactory
 {
     private readonly ConcurrentDictionary<string, object> _templateCaches = new();
     private readonly ConcurrentDictionary<string, DateTime> _lastCacheUpdates = new();
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
 
     public async Task<Email> CreateAsync<TModel>(string templateName, TModel model, Language language)
+        where TModel : IEmailTemplateNecessities
+    {
+        string cacheKey = await CompileAsync<TModel>(templateName, language);
+
+        IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>> template = (IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>>)_templateCaches[cacheKey];
+        string htmlBody = await template.RunAsync(instance => instance.Model = model);
+
+        return new Email(GetSubject(templateName, language), htmlBody);
+    }
+
+    public async Task<string> CompileAsync<TModel>(string templateName, Language language)
         where TModel : IEmailTemplateNecessities
     {
         string cacheKey = $"{language}_{templateName}";
@@ -54,15 +66,18 @@ public sealed partial class EmailFactory(IRazorEngine razorEngine, AppPath appPa
             }
         }
 
-        IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>> template = (IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>>)_templateCaches[cacheKey];
-        string htmlBody = await template.RunAsync(instance => instance.Model = model);
-
-        return new Email(GetSubject(), htmlBody);
+        return cacheKey;
     }
 
-    private static string GetSubject()
+    /// <summary>
+    /// TemplateName(Resx key) has to be the same as the template name
+    /// </summary>
+    /// <param name="templateName"></param>
+    /// <param name="language"></param>
+    /// <returns></returns>
+    private string GetSubject(string templateName, Language language)
     {
-        //Get Subject from resx
-        return "Default Subject";
+        ResxManager rm = resxManager.Src().Go("EmailTemplates").Go("Subjects").File("Subjects.resx");
+        return rm.GetString(key: templateName, language: language);
     }
 }

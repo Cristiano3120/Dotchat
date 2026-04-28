@@ -1,4 +1,5 @@
-﻿using DotchatShared.src.Enums;
+﻿using DotchatServer.src.Application.DTOs.JwtModels;
+using DotchatShared.src.Enums;
 
 using OneOf;
 
