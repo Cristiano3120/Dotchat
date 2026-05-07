@@ -19,6 +19,27 @@ public sealed class AuthRepository(
 {
     private readonly DbSet<ApplicationUser> _users = dbContext.Users;
 
+    public async Task<bool> ConfirmEmailAsync(long userId)
+    {
+        try
+        { 
+            int affectedRows = await _users.Where(x => x.Id == userId).ExecuteUpdateAsync(s => s.SetProperty(e => e.EmailConfirmed, true));
+            if (affectedRows > 0)
+            {
+                Log.Information("Email confirmed successfully for user {UserId}", userId);
+                return true;
+            }
+
+            Log.Error("Failed to confirm email for user {UserId}. No rows were affected, which likely means the user does not exist.", userId);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while confirming email for user {UserId}", userId);
+            return false;
+        }
+    }
+
     /// <summary>
     /// Asynchronously creates a new user in the database and returns the result of the operation.
     /// </summary>

@@ -14,7 +14,7 @@ public sealed class VerificationEmailFactory(IOptions<AppSettings> options)
     {
         Name = name,
         AppName = _settings.AppName,
-        ConfirmUrl = $"{Endpoints.AuthEndpoints.ConfirmEmailEndpoint}?token={token}",
+        ConfirmUrl = $"https://localhost:7250/{Endpoints.AuthEndpoints.ConfirmEmailEndpoint}?token={token}", //TODO: Get WebAdress
         Expiery = expiery,
         Language = language.ToString()
     };

@@ -9,6 +9,7 @@ using DotchatServer.src.Core.Templates;
 using DotchatShared.src.DTOs.AuthRequests;
 using DotchatShared.src.Enums;
 using MimeKit;
+using Serilog;
 using StackExchange.Redis;
 
 namespace DotchatServer.src.Application.Services;
@@ -47,13 +48,41 @@ public sealed class AuthService(
         };
     }
 
+    public async Task ConfirmEmailAsync(string token)
+    {
+        Log.Debug("Confirming email with token: {Token}", token);
+        _ = await redisConn.GetDatabase().StringGetAsync(token).ContinueWith(async task =>
+        {
+            if (task.IsCompletedSuccessfully)
+            {                                    //Sag entweder beim doppelten anklicken des Links expiered oder already used oder denk maybe was anderes aus?
+                long userId = (long)task.Result; //GUCK VerificationEmailFactory.cs Implement IAUthRepo.ConfirmEmailASync
+                Log.Debug("Token valid for user ID: {UserId}", userId);
+
+                bool emailConfirmed = await authRepository.ConfirmEmailAsync(userId);
+                if (emailConfirmed)
+                {
+                    //return html page with success message
+                    _ = await redisConn.GetDatabase().KeyDeleteAsync(token);
+                }
+                else
+                {
+                    //return html page with error message
+                }
+            }
+            else
+            {
+                Log.Warning("Failed to confirm email with token: {Token}. Error: {Error}", token, task.Exception?.Message);
+            }
+        });
+    }
+
     private async Task<RegisterResponse> CompleteRegistrationAsync(ApplicationUser applicationUser)
     {
         MailboxAddress to = new(name: applicationUser.DisplayName, address: applicationUser.Email);
         TimeSpan expiery = TimeSpan.FromMinutes(15);
         string token = await PrepVerificationAsync(applicationUser.Id, expiery);
 
-        VerificationEmailModel verificationEmailModel = 
+        VerificationEmailModel verificationEmailModel =
             verificationEmailFactory.CreateModel(applicationUser.Username, Language.De, token, expiery);
 
 
@@ -73,10 +102,5 @@ public sealed class AuthService(
         _ = await redisConn.GetDatabase().StringSetAsync(key: token, value: userID, expiery);
 
         return token;
-    }
-
-    public async Task VerifyAsync(long userID, string token)
-    {
-
     }
 }

@@ -19,7 +19,7 @@ public sealed record ApplicationUser
     [LogMasked]
     public string PasswordHash { get; init; } = string.Empty;
     public bool TwoFactorEnabled { get; init; } = false;
-    public bool EmailVerified { get; init; } = false;
+    public bool EmailConfirmed { get; init; } = false;
 
     // ── TIMESTAMPS ────────────────────────────────────────────────
     public DateTimeOffset CreatedAt => SnowflakeGenerator.GetCreationTime(Id);

@@ -48,9 +48,11 @@ public sealed class AuthController(AuthService authService) : ControllerBase
         return Ok();
     }
 
-    [HttpGet(Endpoints.AuthEndpoints.Verify)]
-    public async Task<IActionResult> VerifyAsync([FromQuery] int userID, [FromQuery] string token)
+    [HttpGet(Endpoints.AuthEndpoints.ConfirmEmail)]
+    public async Task<IActionResult> ConfirmEmailAsync([FromQuery] string token)
     {
-        return Ok(); //look at linear issue
+        await authService.ConfirmEmailAsync(token);
+        return Ok("TEST STR"); //look at linear issue | musst nen html template returnen
+                     //| lass was einfallen falls token ungültig ist / maybe schon bestätigt wurde
     }
 }

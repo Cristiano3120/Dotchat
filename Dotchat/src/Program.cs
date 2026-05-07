@@ -19,13 +19,14 @@ using DotNetEnv;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MimeKit;
 using RedisRateLimiting;
 
 using Serilog;
 using Serilog.Events;
-
+using Sprache;
 using StackExchange.Redis;
 
 namespace DotchatServer.src;
@@ -113,6 +114,12 @@ public static class Program
         IEnumerable<IWarmable> warmables = app.Services.GetServices<IWarmable>();
         await Task.WhenAll(warmables.Select(w => w.WarmupAsync()));
 
-        await app.RunAsync(app.Configuration.GetConnectionString("WebAdress"));
+        if (app.Services.GetRequiredService<IOptions<AppSettings>>().Value.WebAddress is not string webAddress)
+        {
+            Log.Fatal("WebAddress is not configured. Please set the WebAddress in the configuration to start the application.");
+            return;
+        }
+
+        await app.RunAsync(webAddress);
     }
 }

@@ -1,0 +1,63 @@
+services:
+  dotchatserver:
+    image: ${DOCKER_REGISTRY-}dotchatserver
+    build:
+      context: .
+      dockerfile: Dotchat/Dockerfile
+    ports:
+      - "7250:7250"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:7250
+      - ConnectionStrings__PostgreSQL=Host=postgres;Port=5432;Database=Cacx;Username=user;Password=Cristiano2007!
+      - ConnectionStrings__Redis=redis:6379,password=Cristiano2007!
+    depends_on:
+      postgres:
+        condition: service_healthy  
+      redis:
+        condition: service_started
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass Cristiano2007! --appendonly yes
+
+  redis-ui:
+    image: patrikx3/p3x-redis-ui
+    container_name: redis-ui
+    ports:
+      - "7843:7843"
+    volumes:
+      - redis_ui_settings:/settings
+    depends_on:
+      - redis
+
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: Cristiano2007!
+      POSTGRES_DB: Cacx
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d Cacx"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  postgres_data:
+  redis_ui_settings:
