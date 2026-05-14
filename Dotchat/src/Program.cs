@@ -92,7 +92,7 @@ public static class Program
         _ = builder.Services.AddAuthorization();
 
         _ = builder.Services.AddCoreServices();
-        builder.Services.AddInfrastructureServices(envVals, configuration: builder.Configuration);
+        builder.Services.AddInfrastructureServices(builder.Environment, envVals, configuration: builder.Configuration);
         builder.Services.AddApplicationServices(builder.Environment, jwtSettings, workerID: builder.Configuration.GetValue<int>("WorkerID"));
         builder.Services.AddOptions<AppSettings>().Bind(builder.Configuration.GetSection("AppSettings"));
 

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <title>E-Mail erfolgreich bestätigt</title>
+    <style>
+        @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:ital,wght@0,700;1,400&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: #f0f4f1;
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 16px;
+            background-image: radial-gradient(circle at 20% 20%, #d6ede0 0%, transparent 50%),
+                              radial-gradient(circle at 80% 80%, #c8e6d4 0%, transparent 50%);
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            max-width: 520px;
+            width: 100%;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .card-header {
+            background-color: #4F46E5;
+            padding: 28px 40px;
+            text-align: center;
+        }
+
+        .card-header h1 {
+            font-family: 'Fraunces', serif;
+            font-weight: 700;
+            font-size: 22px;
+            color: #ffffff;
+            letter-spacing: -0.3px;
+        }
+
+        .card-body {
+            padding: 44px 48px;
+            text-align: center;
+        }
+
+        .icon-wrap {
+            width: 72px;
+            height: 72px;
+            background-color: #ecfdf5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 28px;
+            border: 2px solid #a7f3d0;
+        }
+
+        .icon-wrap svg {
+            width: 34px;
+            height: 34px;
+        }
+
+        .card-body h2 {
+            font-family: 'Fraunces', serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 12px;
+            letter-spacing: -0.4px;
+        }
+
+        .card-body p {
+            font-size: 15px;
+            color: #6B7280;
+            line-height: 1.65;
+            margin-bottom: 32px;
+        }
+
+        .card-body p strong {
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #4F46E5;
+            color: #ffffff;
+            padding: 13px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.1px;
+            transition: background-color 0.15s;
+        }
+
+        .btn:hover {
+            background-color: #4338CA;
+        }
+
+        .card-footer {
+            background-color: #F9FAFB;
+            padding: 20px 48px;
+            text-align: center;
+            border-top: 1px solid #E5E7EB;
+        }
+
+        .card-footer p {
+            font-size: 12px;
+            color: #9CA3AF;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+
+        <!-- Header -->
+        <div class="card-header">
+            <h1>@Model.AppName</h1>
+        </div>
+
+        <!-- Body -->
+        <div class="card-body">
+
+            <div class="icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="11" stroke="#10B981" stroke-width="1.5"/>
+                    <path d="M7 12.5l3.5 3.5 6.5-7" stroke="#10B981" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+
+            <h2>E-Mail bestätigt!</h2>
+
+            <p>
+                Hallo <strong>@Model.Name</strong>, deine E-Mail-Adresse wurde erfolgreich
+                verifiziert. Dein Konto ist jetzt vollständig aktiviert und einsatzbereit.
+            </p>
+
+            <a href="@Model.LoginUrl" class="btn">Jetzt anmelden</a>
+        </div>
+
+        <!-- Footer -->
+        <div class="card-footer">
+            <p>&copy; @DateTime.Now.Year @Model.AppName</p>
+        </div>
+
+    </div>
+</body>
+</html>

@@ -1,6 +1,8 @@
 ﻿using DotchatServer.src.Application.DTOs.EmailModels;
+using DotchatServer.src.Application.DTOs.Emails;
 using DotchatServer.src.Application.Extensions;
 using DotchatServer.src.Application.Interfaces;
+using DotchatServer.src.Application.Services;
 using DotchatServer.src.Core.Interfaces;
 using DotchatServer.src.Infrastructure.Persistence;
 using DotchatServer.src.Infrastructure.Persistence.Repos;
@@ -16,6 +18,7 @@ namespace DotchatServer.src.Infrastructure;
 public static class InfrastructureServiceExtensions
 {
     public static void AddInfrastructureServices(this IServiceCollection services,
+        IWebHostEnvironment env,
         IEnumerable<KeyValuePair<string, string>> envVals,
         IConfiguration configuration)
     {
@@ -32,7 +35,24 @@ public static class InfrastructureServiceExtensions
         });
 
         _ = services.AddSingleton<IRazorEngine, RazorEngine>();
-        _ = services.AddSingleton<IEmailFactory, EmailFactory>();
+        _ = services.AddSingleton<ITemplateFactory<Email>, TemplateFactory<Email>>((services) => new TemplateFactory<Email>
+            (
+                razorEngine: services.GetRequiredService<IRazorEngine>(),
+                resxManager: ResxManager.From(env),
+                AppPath.From(env),
+                baseFolderPath: "EmailTemplates", //TODO: Remove this make it either configurable or only use AppPath, Document 
+                new Func<string?, string, Email>((subject, body) => new Email(subject, body)
+            )));
+
+        _ = services.AddSingleton<ITemplateFactory<string> >((services) => new TemplateFactory<string>
+            (
+                razorEngine: services.GetRequiredService<IRazorEngine>(),
+                resxManager: ResxManager.From(env),
+                AppPath.From(env),
+                baseFolderPath: "EmailConfirmationTemplates", //TODO: Remove this make it either configurable or only use AppPath, Document 
+                new Func<string?, string, string>((_, body) => body)
+            ));
+
         _ = services.AddSingleton<IEmailClient, EmailClient>(services => new EmailClient(configuration.GetValue<bool>("SendEmailToFakeSMPT") 
             ? configuration.GetSection("EmailSettingsDev").Get<EmailOptions>()! 
             : configuration.GetSection("EmailSettingsProd").Get<EmailOptions>()!));

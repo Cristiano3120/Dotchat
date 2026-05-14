@@ -1,6 +1,6 @@
 ﻿namespace DotchatServer.src.Core.Interfaces;
 
-public interface IEmailTemplateNecessities
+public interface ITemplateNecessities
 {
     string Language { get; }
     string AppName { get; }

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Link ungültig oder bereits bestätigt</title>
+    <style>
+        @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:ital,wght@0,700;1,400&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: #f5f4f0;
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 16px;
+            background-image: radial-gradient(circle at 20% 20%, #ede8d6 0%, transparent 50%),
+                              radial-gradient(circle at 80% 80%, #e8e0c8 0%, transparent 50%);
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            max-width: 520px;
+            width: 100%;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .card-header {
+            background-color: #4F46E5;
+            padding: 28px 40px;
+            text-align: center;
+        }
+
+        .card-header h1 {
+            font-family: 'Fraunces', serif;
+            font-weight: 700;
+            font-size: 22px;
+            color: #ffffff;
+            letter-spacing: -0.3px;
+        }
+
+        .card-body {
+            padding: 44px 48px;
+            text-align: center;
+        }
+
+        .icon-wrap {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 28px;
+        }
+
+        /* Already confirmed → soft amber */
+        .icon-wrap.already-confirmed {
+            background-color: #fffbeb;
+            border: 2px solid #fcd34d;
+        }
+
+        /* Expired → soft red */
+        .icon-wrap.expired {
+            background-color: #fff1f2;
+            border: 2px solid #fca5a5;
+        }
+
+        .icon-wrap svg {
+            width: 34px;
+            height: 34px;
+        }
+
+        .card-body h2 {
+            font-family: 'Fraunces', serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 12px;
+            letter-spacing: -0.4px;
+        }
+
+        .card-body p {
+            font-size: 15px;
+            color: #6B7280;
+            line-height: 1.65;
+            margin-bottom: 12px;
+        }
+
+        .card-body p strong {
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #E5E7EB;
+            margin: 24px 0;
+        }
+
+        .hint {
+            font-size: 13px;
+            color: #9CA3AF;
+            line-height: 1.6;
+            margin-bottom: 28px !important;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #4F46E5;
+            color: #ffffff;
+            padding: 13px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.1px;
+        }
+
+        .btn:hover {
+            background-color: #4338CA;
+        }
+
+        .btn-ghost {
+            display: inline-block;
+            color: #4F46E5;
+            padding: 13px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+            border: 1.5px solid #4F46E5;
+            margin-left: 8px;
+        }
+
+        .btn-ghost:hover {
+            background-color: #EEF2FF;
+        }
+
+        .card-footer {
+            background-color: #F9FAFB;
+            padding: 20px 48px;
+            text-align: center;
+            border-top: 1px solid #E5E7EB;
+        }
+
+        .card-footer p {
+            font-size: 12px;
+            color: #9CA3AF;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+
+        <!-- Header -->
+        <div class="card-header">
+            <h1>@Model.AppName</h1>
+        </div>
+
+        <!-- Body -->
+        <div class="card-body">
+
+            @if (Model.IsAlreadyConfirmed)
+            {
+                <!-- Already confirmed state -->
+                <div class="icon-wrap already-confirmed">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="11" stroke="#F59E0B" stroke-width="1.5"/>
+                        <path d="M12 7v5.5l3 3" stroke="#F59E0B" stroke-width="2"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+
+                <h2>Bereits bestätigt</h2>
+
+                <p>
+                    Hallo <strong>@Model.Name</strong>, deine E-Mail-Adresse wurde bereits
+                    erfolgreich verifiziert. Du kannst dich direkt anmelden.
+                </p>
+
+                <hr class="divider" />
+
+                <p class="hint">
+                    Du hast dich nicht selbst registriert oder kennst dieses Konto nicht?
+                    Wende dich gerne an unseren Support.
+                </p>
+
+                <a href="@Model.LoginUrl" class="btn">Zur Anmeldung</a>
+            }
+            else
+            {
+                <!-- Expired state -->
+                <div class="icon-wrap expired">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="11" stroke="#EF4444" stroke-width="1.5"/>
+                        <path d="M12 7v5" stroke="#EF4444" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="12" cy="16.5" r="1" fill="#EF4444"/>
+                    </svg>
+                </div>
+
+                <h2>Link abgelaufen</h2>
+
+                <p>
+                    Hallo <strong>@Model.Name</strong>, dein Bestätigungslink ist leider
+                    abgelaufen oder ungültig. Bestätigungslinks sind nur für begrenzte Zeit gültig.
+                </p>
+
+                <hr class="divider" />
+
+                <p class="hint">
+                    Fordere einfach einen neuen Bestätigungslink an – das dauert nur einen Moment.
+                </p>
+
+                <a href="@Model.ResendUrl" class="btn">Neuen Link anfordern</a>
+                <a href="@Model.LoginUrl" class="btn-ghost">Zur Anmeldung</a>
+            }
+
+        </div>
+
+        <!-- Footer -->
+        <div class="card-footer">
+            <p>&copy; @DateTime.Now.Year @Model.AppName</p>
+        </div>
+
+    </div>
+</body>
+</html>

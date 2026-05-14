@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using DotchatServer.src.Application.DTOs.EmailModels;
+using DotchatServer.src.Application.DTOs.Emails;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Core.Templates;
 using DotchatServer.src.Infrastructure;
@@ -9,7 +10,7 @@ using Serilog;
 
 namespace DotchatServer.src.Application.Services;
 
-public sealed class TemplatePrecompilationService(IEmailFactory emailFactory) : IWarmable
+public sealed class TemplatePrecompilationService(ITemplateFactory<Email> emailFactory) : IWarmable
 {
     private static IEnumerable<(string Name, Type ModelType)> GetAllTemplates() =>
     [
@@ -56,8 +57,8 @@ public sealed class TemplatePrecompilationService(IEmailFactory emailFactory) : 
     {
         Stopwatch sw = Stopwatch.StartNew();
 
-        MethodInfo method = typeof(EmailFactory)
-            .GetMethod(nameof(EmailFactory.CompileAsync))!
+        MethodInfo method = typeof(ITemplateFactory<Email>)
+            .GetMethod(nameof(ITemplateFactory<Email>.CompileAsync))!
             .MakeGenericMethod(template.ModelType);
 
         await (Task)method.Invoke(emailFactory, [template.Name, language])!;

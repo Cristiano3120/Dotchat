@@ -1,12 +1,9 @@
-﻿using DotchatServer.src.Application.DTOs.Emails;
-using DotchatServer.src.Core.Interfaces;
-using DotchatServer.src.Core.Templates;
-
+﻿using DotchatServer.src.Core.Interfaces;
 using DotchatShared.src.Enums;
 
 namespace DotchatServer.src.Application.Interfaces;
 
-public interface IEmailFactory
+public interface ITemplateFactory<TReturn>
 {
     /// <summary>
     /// Creates an email message based on the specified template, model, and language. The template will be rendered with the provided model data and localized according to the specified language.
@@ -15,9 +12,9 @@ public interface IEmailFactory
     /// <param name="model"></param>
     /// <param name="language"></param>
     /// <returns></returns>
-    Task<Email> CreateAsync<TModel>(string templateName, TModel model, Language language)
-        where TModel : IEmailTemplateNecessities;
+    Task<TReturn> CreateAsync<TModel>(string templateName, TModel model, Language language)
+        where TModel : ITemplateNecessities;
 
     Task<string> CompileAsync<TModel>(string templateName, Language language)
-        where TModel : IEmailTemplateNecessities;
+        where TModel : ITemplateNecessities;
 }

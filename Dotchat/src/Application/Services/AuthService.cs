@@ -17,9 +17,10 @@ namespace DotchatServer.src.Application.Services;
 public sealed class AuthService(
     VerificationEmailFactory verificationEmailFactory,
     SnowflakeGenerator snowflakeGenerator,
+    ITemplateFactory<string> emailConfirmationTemplateFactory, 
+    ITemplateFactory<Email> emailFactory,
     IConnectionMultiplexer redisConn,
     IAuthRepository authRepository,
-    IEmailFactory emailFactory,
     IEmailClient emailClient,
     IJwtService jwtService)
 {
@@ -48,14 +49,14 @@ public sealed class AuthService(
         };
     }
 
-    public async Task ConfirmEmailAsync(string token)
+    public async Task<string> ConfirmEmailAsync(string token)
     {
         Log.Debug("Confirming email with token: {Token}", token);
         _ = await redisConn.GetDatabase().StringGetAsync(token).ContinueWith(async task =>
         {
             if (task.IsCompletedSuccessfully)
-            {                                    //Sag entweder beim doppelten anklicken des Links expiered oder already used oder denk maybe was anderes aus?
-                long userId = (long)task.Result; //GUCK VerificationEmailFactory.cs Implement IAUthRepo.ConfirmEmailASync
+            {
+                long userId = (long)task.Result;
                 Log.Debug("Token valid for user ID: {UserId}", userId);
 
                 bool emailConfirmed = await authRepository.ConfirmEmailAsync(userId);
@@ -74,6 +75,16 @@ public sealed class AuthService(
                 Log.Warning("Failed to confirm email with token: {Token}. Error: {Error}", token, task.Exception?.Message);
             }
         });
+
+        EmailConfirmationStatusDto statusDTO = new EmailConfirmationStatusDto()
+        {
+            AppName = "Dotchat",
+            Name = "User", //TODO Usernamen aus DB holen
+            IsAlreadyConfirmed = false, //TODO aus DB hole
+            LoginUrl = "https://dotchat.app/login",
+            ResendUrl = "https://dotchat.app/resend-confirmation"
+        };
+        return await emailConfirmationTemplateFactory.CreateAsync<EmailConfirmationStatusDto>("EmailConfirmed", statusDTO, Language.De);
     }
 
     private async Task<RegisterResponse> CompleteRegistrationAsync(ApplicationUser applicationUser)
