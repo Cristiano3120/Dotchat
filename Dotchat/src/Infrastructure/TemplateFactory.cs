@@ -2,8 +2,8 @@
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Application.Services;
 using DotchatServer.src.Core.Interfaces;
-using DotchatShared.src.Enums;
 using RazorEngineCore;
+using Serilog;
 
 namespace DotchatServer.src.Infrastructure;
 
@@ -16,33 +16,45 @@ namespace DotchatServer.src.Infrastructure;
 /// <param name="appPath"></param>
 /// <param name="baseFolderPath"></param>
 /// <param name="factory">The factory function for creating the return type. The first parameter is the subject which is optional(only used for emails), and the second is the HTML body.</param>
-public class TemplateFactory<TReturn>(
-    IRazorEngine razorEngine, 
-    ResxManager resxManager, 
-    AppPath appPath, 
-    string baseFolderPath,
-    Func<string?, string, TReturn> factory) : ITemplateFactory<TReturn> where TReturn : class
+public class TemplateFactory<TReturn>: ITemplateFactory<TReturn> where TReturn : class
 {
     private readonly ConcurrentDictionary<string, object> _templateCaches = new();
     private readonly ConcurrentDictionary<string, DateTime> _lastCacheUpdates = new();
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
 
-    public async Task<TReturn> CreateAsync<TModel>(string templateName, TModel model, Language language)
+    private readonly Func<string?, string, TReturn> _factory;
+    private readonly IRazorEngine _razorEngine;
+    private readonly ResxManager _resxManager;
+    private readonly AppPath _appPath;
+
+    private readonly string _pathToTemplates;
+
+    public TemplateFactory(IRazorEngine razorEngine, ResxManager resxManager, AppPath appPath, Func<string?, string, TReturn> factory)
+    {
+        _razorEngine = razorEngine;
+        _resxManager = resxManager;
+        _appPath = appPath;
+        _factory = factory;
+
+        _pathToTemplates = appPath.ToString();
+    }
+
+    public async Task<TReturn> CreateAsync<TModel>(string templateName, TModel model)
         where TModel : ITemplateNecessities
     {
-        string cacheKey = await CompileAsync<TModel>(templateName, language);
+        string cacheKey = await CompileAsync<TModel>(templateName, model.Language);
 
         IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>> template = (IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>>)_templateCaches[cacheKey];
         string htmlBody = await template.RunAsync(instance => instance.Model = model);
 
-        return factory(GetSubject(templateName, language), htmlBody);
+        return _factory(GetSubject(templateName, model.Language), htmlBody);
     }
 
-    public async Task<string> CompileAsync<TModel>(string templateName, Language language)
+    public async Task<string> CompileAsync<TModel>(string templateName, string language)
         where TModel : ITemplateNecessities
     {
         string cacheKey = $"{language}_{templateName}";
-        string templatePath = appPath.Src().Go(baseFolderPath).Go(language.ToString()).File($"{templateName}.cshtml");
+        string templatePath = _appPath.Go(_pathToTemplates).Go(language.ToString()).File($"{templateName}.cshtml");
 
         SemaphoreSlim semaphore = _locks.GetOrAdd(cacheKey, _ => new SemaphoreSlim(1, 1));
 
@@ -60,15 +72,23 @@ public class TemplateFactory<TReturn>(
 
                 if (!cacheValid)
                 {
-                    string templateContent = await File.ReadAllTextAsync(templatePath);
-                    IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>> compiled = await razorEngine.CompileAsync<RazorEngineTemplateBase<TModel>>(
-                        templateContent, builder =>
-                        {
-                            builder.AddUsing("System");
-                        });
+                    try
+                    {
+                        string templateContent = await File.ReadAllTextAsync(templatePath);
+                        IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>> compiled = await _razorEngine.CompileAsync<RazorEngineTemplateBase<TModel>>(
+                            templateContent, builder =>
+                            {
+                                builder.AddUsing("System");
+                            });
 
-                    _templateCaches[cacheKey] = compiled;
-                    _lastCacheUpdates[cacheKey] = DateTime.UtcNow;
+                        _templateCaches[cacheKey] = compiled;
+                        _lastCacheUpdates[cacheKey] = DateTime.UtcNow;
+                    }
+                    catch (Exception ex) 
+                    {
+                        Log.Error("Error occurred while compiling template: {TemplatePath}\n{Exception}", templatePath, ex);
+                        throw;
+                    }
                 }
             }
             finally
@@ -86,12 +106,12 @@ public class TemplateFactory<TReturn>(
     /// <param name="templateName"></param>
     /// <param name="language"></param>
     /// <returns></returns>
-    private string GetSubject(string templateName, Language language)
+    private string GetSubject(string templateName, string language)
     {
         try
         {
-            ResxManager rm = resxManager.Go(baseFolderPath).Go("Subjects").File("Subjects.resx");
-            return rm.GetString(key: templateName, language: language);
+            ResxManager rm = _resxManager.Go(_pathToTemplates).Go("Subjects").File("Subjects.resx");
+            return rm.GetString(key: templateName, language);
         }
         catch (Exception)
         {

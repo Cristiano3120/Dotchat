@@ -39,8 +39,7 @@ public static class InfrastructureServiceExtensions
             (
                 razorEngine: services.GetRequiredService<IRazorEngine>(),
                 resxManager: ResxManager.From(env),
-                AppPath.From(env),
-                baseFolderPath: "EmailTemplates", //TODO: Remove this make it either configurable or only use AppPath, Document 
+                AppPath.From(env).Src().Go("EmailTemplates"),
                 new Func<string?, string, Email>((subject, body) => new Email(subject, body)
             )));
 
@@ -48,8 +47,7 @@ public static class InfrastructureServiceExtensions
             (
                 razorEngine: services.GetRequiredService<IRazorEngine>(),
                 resxManager: ResxManager.From(env),
-                AppPath.From(env),
-                baseFolderPath: "EmailConfirmationTemplates", //TODO: Remove this make it either configurable or only use AppPath, Document 
+                AppPath.From(env).Src().Go("EmailConfirmationTemplates"),
                 new Func<string?, string, string>((_, body) => body)
             ));
 

@@ -8,6 +8,7 @@ using DotchatServer.src.Core.Interfaces;
 using DotchatServer.src.Core.Templates;
 using DotchatShared.src.DTOs.AuthRequests;
 using DotchatShared.src.Enums;
+using Microsoft.AspNetCore.Localization;
 using MimeKit;
 using Serilog;
 using StackExchange.Redis;
@@ -15,9 +16,10 @@ using StackExchange.Redis;
 namespace DotchatServer.src.Application.Services;
 
 public sealed class AuthService(
+    EmailConfirmationStatusModelFactory emailConfirmationStatusModelFactory,
     VerificationEmailFactory verificationEmailFactory,
     SnowflakeGenerator snowflakeGenerator,
-    ITemplateFactory<string> emailConfirmationTemplateFactory, 
+    ITemplateFactory<string> emailConfirmationTemplateFactory,
     ITemplateFactory<Email> emailFactory,
     IConnectionMultiplexer redisConn,
     IAuthRepository authRepository,
@@ -49,42 +51,34 @@ public sealed class AuthService(
         };
     }
 
-    public async Task<string> ConfirmEmailAsync(string token)
+    public async Task<string> ConfirmEmailAsync(string token, string language)
     {
         Log.Debug("Confirming email with token: {Token}", token);
-        _ = await redisConn.GetDatabase().StringGetAsync(token).ContinueWith(async task =>
-        {
-            if (task.IsCompletedSuccessfully)
-            {
-                long userId = (long)task.Result;
-                Log.Debug("Token valid for user ID: {UserId}", userId);
+        RedisValue userId = await redisConn.GetDatabase().StringGetAsync(token);
+        //        //look at linear issue
+        //Implement Resend Confirmation Email Funktionalität | Fix TemplatePrecompilation und mach async(Background thread) 
+        string templateName = Templates.HtmlTemplates.EmailConfirmationFailed;
+        EmailConfirmationStatus emailConfirmationStatus = emailConfirmationStatusModelFactory.CreateModel(
+            userId: (long)userId,
+            language: language
+        );
 
-                bool emailConfirmed = await authRepository.ConfirmEmailAsync(userId);
-                if (emailConfirmed)
-                {
-                    //return html page with success message
-                    _ = await redisConn.GetDatabase().KeyDeleteAsync(token);
-                }
-                else
-                {
-                    //return html page with error message
-                }
-            }
-            else
-            {
-                Log.Warning("Failed to confirm email with token: {Token}. Error: {Error}", token, task.Exception?.Message);
-            }
-        });
-
-        EmailConfirmationStatusDto statusDTO = new EmailConfirmationStatusDto()
+        if (!userId.HasValue)
         {
-            AppName = "Dotchat",
-            Name = "User", //TODO Usernamen aus DB holen
-            IsAlreadyConfirmed = false, //TODO aus DB hole
-            LoginUrl = "https://dotchat.app/login",
-            ResendUrl = "https://dotchat.app/resend-confirmation"
-        };
-        return await emailConfirmationTemplateFactory.CreateAsync<EmailConfirmationStatusDto>("EmailConfirmed", statusDTO, Language.De);
+            Log.Warning("Failed to confirm email with token: {Token}. Error: {Error}", token, "Invalid token");
+            return await emailConfirmationTemplateFactory.CreateAsync<EmailConfirmationStatus>(templateName, emailConfirmationStatus);
+        }
+
+        Log.Debug("Token valid for user ID: {UserId}", userId);
+
+        bool emailConfirmed = await authRepository.ConfirmEmailAsync((long)userId);
+        if (emailConfirmed)
+        {
+            _ = await redisConn.GetDatabase().KeyDeleteAsync(token);
+            templateName = Templates.HtmlTemplates.EmailConfirmed;
+        }
+
+        return await emailConfirmationTemplateFactory.CreateAsync<EmailConfirmationStatus>(templateName, emailConfirmationStatus);
     }
 
     private async Task<RegisterResponse> CompleteRegistrationAsync(ApplicationUser applicationUser)
@@ -99,8 +93,7 @@ public sealed class AuthService(
 
         Email email = await emailFactory.CreateAsync<VerificationEmailModel>(
             templateName: Templates.EmailTemplates.VerificationEmail,
-            model: verificationEmailModel,
-            language: Language.De
+            model: verificationEmailModel
         );
 
         _ = await emailClient.TrySendEmailAsync(recipients: [to], email); //TODO JWT In database speichern

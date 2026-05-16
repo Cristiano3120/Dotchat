@@ -1,5 +1,4 @@
 ﻿using DotchatServer.src.Core.Interfaces;
-using DotchatShared.src.Enums;
 
 namespace DotchatServer.src.Application.Interfaces;
 
@@ -12,9 +11,9 @@ public interface ITemplateFactory<TReturn>
     /// <param name="model"></param>
     /// <param name="language"></param>
     /// <returns></returns>
-    Task<TReturn> CreateAsync<TModel>(string templateName, TModel model, Language language)
+    Task<TReturn> CreateAsync<TModel>(string templateName, TModel model)
         where TModel : ITemplateNecessities;
 
-    Task<string> CompileAsync<TModel>(string templateName, Language language)
+    Task<string> CompileAsync<TModel>(string templateName, string language)
         where TModel : ITemplateNecessities;
 }

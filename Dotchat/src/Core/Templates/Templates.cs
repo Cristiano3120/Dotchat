@@ -6,4 +6,10 @@ public static class Templates
     {
         public const string VerificationEmail = "VerificationEmail";
     }
+
+    public static class HtmlTemplates
+    {
+        public const string EmailConfirmed = "EmailConfirmed";
+        public const string EmailConfirmationFailed = "EmailConfirmationInvalid";
+    }
 }

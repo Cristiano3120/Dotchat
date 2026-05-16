@@ -12,6 +12,7 @@ public static class Endpoints
         public const string Verify = "verify";
         public const string RequestVerification = "request-verification";
         public const string ConfirmEmail = "confirm-email";
+        public const string ResendConfirmation = "resend-confirmation";
 
         public static string BaseAuthEndpoint => $"{Base}/{BaseAuth}";
         public static string RegisterEndpoint => $"{BaseAuthEndpoint}/{Register}";
@@ -19,5 +20,6 @@ public static class Endpoints
         public static string VerifyEndpoint => $"{BaseAuthEndpoint}/{Verify}";
         public static string RequestVerificationEndpoint => $"{BaseAuthEndpoint}/{RequestVerification}";
         public static string ConfirmEmailEndpoint => $"{BaseAuthEndpoint}/{ConfirmEmail}";
+        public static string ResendConfirmationEndpoint => $"{BaseAuthEndpoint}/{ResendConfirmation}";
     }
 }

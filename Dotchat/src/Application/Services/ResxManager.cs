@@ -40,7 +40,7 @@ public sealed class ResxManager : NavigableBase<ResxManager>
         return new(rm, filePath, _root, _assemblyRootPath);
     }
 
-    public string GetString(string key, Language language)
+    public string GetString(string key, string language)
     {
         if (_resourceManager is null)
         {

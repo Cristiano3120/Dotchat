@@ -9,6 +9,7 @@ using DotchatShared.src.DTOs.AuthRequests;
 using DotchatShared.src.Enums;
 
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -51,8 +52,7 @@ public sealed class AuthController(AuthService authService) : ControllerBase
     [HttpGet(Endpoints.AuthEndpoints.ConfirmEmail)]
     public async Task<IActionResult> ConfirmEmailAsync([FromQuery] string token)
     {
-        return Content(await authService.ConfirmEmailAsync(token), contentType: "text/html"); 
-        //look at linear issue
-        //lass was einfallen falls token ungültig ist / maybe schon bestätigt wurde
+        string lang = HttpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture.Culture.TwoLetterISOLanguageName ?? "en";
+        return Content(await authService.ConfirmEmailAsync(token, lang), contentType: "text/html"); 
     }
 }
