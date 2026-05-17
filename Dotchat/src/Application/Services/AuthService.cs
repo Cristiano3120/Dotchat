@@ -55,8 +55,8 @@ public sealed class AuthService(
     {
         Log.Debug("Confirming email with token: {Token}", token);
         RedisValue userId = await redisConn.GetDatabase().StringGetAsync(token);
-        //        //look at linear issue
-        //Implement Resend Confirmation Email Funktionalität | Fix TemplatePrecompilation und mach async(Background thread) 
+
+        //Implement Resend Confirmation Email Funktionalität
         string templateName = Templates.HtmlTemplates.EmailConfirmationFailed;
         EmailConfirmationStatus emailConfirmationStatus = emailConfirmationStatusModelFactory.CreateModel(
             userId: (long)userId,

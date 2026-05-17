@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using System.Reflection;
+using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Application.DTOs.Emails;
 using DotchatServer.src.Application.Interfaces;
@@ -9,59 +9,52 @@ using Serilog;
 
 namespace DotchatServer.src.Application.Services;
 
-public sealed class TemplatePrecompilationService(ITemplateFactory<Email> emailFactory) : IWarmable
+public sealed class TemplatePrecompilationService(ITemplateFactory<Email> emailFactory, ITemplateFactory<string> htmlFactory) : IWarmable
 {
-    private static IEnumerable<(string Name, Type ModelType)> GetAllTemplates() =>
+    private IEnumerable<(string Name, Func<Language, Task> Compile)> GetAllTemplates() =>
     [
-        (Templates.EmailTemplates.VerificationEmail, typeof(VerificationEmailModel)),
+        (Templates.EmailTemplates.VerificationEmail,
+            lang => emailFactory.CompileAsync<VerificationEmailModel>(Templates.EmailTemplates.VerificationEmail, lang.ToString())),
+
+        (Templates.HtmlTemplates.EmailConfirmed,
+            lang => htmlFactory.CompileAsync<EmailConfirmationStatus>(Templates.HtmlTemplates.EmailConfirmed, lang.ToString())),
+
+        (Templates.HtmlTemplates.EmailConfirmationFailed,
+            lang => htmlFactory.CompileAsync<EmailConfirmationStatus>(Templates.HtmlTemplates.EmailConfirmationFailed, lang.ToString())),
     ];
 
     public async Task WarmupAsync()
     {
-        (Task Task, string Name, Language Language)[] started = [];
         Stopwatch sw = Stopwatch.StartNew();
+        Log.Information("Starting template precompilation");
+
+        (Task Task, string Name, Language Language)[] started =
+            [.. GetAllTemplates().SelectMany(t => Enum.GetValues<Language>(), (t, l) => (Task: CompileTemplateAsync(t, l), t.Name, Language: l))];
 
         try
         {
-            Log.Information("Starting template precompilation");
-
-            IEnumerable<(string Name, Type ModelType)> templates = GetAllTemplates();
-            Language[] languages = Enum.GetValues<Language>();
-
-            IEnumerable<(Task Task, string Name, Language Language)> tasks =
-                from template in templates
-                from language in languages
-                select (CompileTemplateAsync(template, language), template.Name, language);
-
-            started = [.. tasks];
             await Task.WhenAll(started.Select(t => t.Task));
         }
-        catch { }
+        catch (Exception)
+        {
+            // The individual exceptions are handled in the finally block
+            //We just need to catch the ex here so the application doesn't crash
+        }
         finally
         {
-            foreach ((Task task, string name, Language language) in started)
-            {
-                if (task.IsFaulted)
-                {
-                    Log.Error(task.Exception, "Failed to compile {0}[{1}]", name, language);
-                }
-            }
+            foreach ((Task? task, string? name, Language language) in started.Where(t => t.Task.IsFaulted))
+                Log.Error(task.Exception, "Failed to compile {0}[{1}]", name, language);
 
             Log.Information("Precompilation done. Took {0}ms", sw.ElapsedMilliseconds);
         }
     }
 
 
-    private async Task CompileTemplateAsync((string Name, Type ModelType) template, Language language)
+    private async Task CompileTemplateAsync((string Name, Func<Language, Task> Compile) template, Language language)
     {
         Stopwatch sw = Stopwatch.StartNew();
+        await template.Compile(language);
 
-        MethodInfo method = typeof(ITemplateFactory<Email>)
-            .GetMethod(nameof(ITemplateFactory<Email>.CompileAsync))!
-            .MakeGenericMethod(template.ModelType);
-
-        await (Task)method.Invoke(emailFactory, [template.Name, language])!;
-
-        Log.Information("Compiled {0}[{1}] Took: {2}ms", template.Name, language.ToString(), sw.ElapsedMilliseconds);
+        Log.Information("Compiled {0}[{1}] Took: {2}ms", template.Name, language, sw.ElapsedMilliseconds);
     }
 }
