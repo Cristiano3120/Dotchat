@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-
+using System.Text;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Application.Interfaces.Security;
 
@@ -11,8 +11,8 @@ namespace DotchatServer.src.Application.Services;
 
 internal sealed class Argon2Hasher : IHashingService, IWarmable
 {
-    public string Hash(string input)
-        => Argon2.Hash
+    public byte[] Hash(string input)
+        => Encoding.UTF8.GetBytes(Argon2.Hash
         (
             password: input,
             timeCost: 2, //Number of iterations
@@ -20,7 +20,7 @@ internal sealed class Argon2Hasher : IHashingService, IWarmable
             parallelism: 1, //Number of threads and compute lanes to use
             type: Argon2Type.HybridAddressing,
             hashLength: 32 //Length of the resulting hash in bytes 
-        );
+        ));
 
     public Task WarmupAsync()
     {

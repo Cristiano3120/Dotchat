@@ -1,11 +1,11 @@
-﻿using DotchatServer.src.Core.Entities;
-
+﻿using DotchatServer.src.Application.DTOs;
+using DotchatServer.src.Core.Entities;
 using DotchatShared.src.Enums;
 
 namespace DotchatServer.src.Application.Interfaces;
 
 public interface IAuthRepository
 {
-    Task<RegisterErrorType> CreateUserAsync(ApplicationUser applicationUser);
     Task<bool> ConfirmEmailAsync(long userId);
+    Task<RegisterErrorType> CompleteRegistrationAsync(ApplicationUser applicationUser, RefreshTokenInfo refreshTokenInfo, string userPassword);
 }

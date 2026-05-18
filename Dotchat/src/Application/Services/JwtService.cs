@@ -62,4 +62,6 @@ internal sealed class JwtService(JwtSettings jwtSettings) : IJwtService
             return Convert.ToBase64String(randomNumber);
         }
     }
+
+    public TimeSpan GetDefaultExpiery() => TimeSpan.FromMinutes(jwtSettings.Expiery);
 }

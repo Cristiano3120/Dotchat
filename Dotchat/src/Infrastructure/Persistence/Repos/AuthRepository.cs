@@ -1,4 +1,5 @@
-﻿using DotchatServer.src.Application.Enums;
+﻿using DotchatServer.src.Application.DTOs;
+using DotchatServer.src.Application.Enums;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Application.Interfaces.Security;
 using DotchatServer.src.Core.Entities;
@@ -6,7 +7,7 @@ using DotchatServer.src.Core.Entities;
 using DotchatShared.src.Enums;
 
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
 
 using Serilog;
@@ -22,7 +23,7 @@ public sealed class AuthRepository(
     public async Task<bool> ConfirmEmailAsync(long userId)
     {
         try
-        { 
+        {
             int affectedRows = await _users.Where(x => x.Id == userId).ExecuteUpdateAsync(s => s.SetProperty(e => e.EmailConfirmed, true));
             if (affectedRows > 0)
             {
@@ -40,49 +41,50 @@ public sealed class AuthRepository(
         }
     }
 
-    /// <summary>
-    /// Asynchronously creates a new user in the database and returns the result of the operation.
-    /// </summary>
-    /// <remarks>If the username or email already exists in the database, the method returns a corresponding
-    /// result. If the database is unavailable or an unexpected error occurs, the method returns an appropriate error
-    /// result. The operation does not throw exceptions for these cases but instead returns a result value describing
-    /// the outcome.</remarks>
-    /// <param name="applicationUser">The user entity to be created. Must contain valid and unique username and email information.</param>
-    /// <returns>A value indicating the result of the user creation operation. Returns a specific result if the username or email
-    /// is already taken, if the database is unavailable, or if an unknown error occurs.</returns>
-    public async Task<RegisterErrorType> CreateUserAsync(ApplicationUser applicationUser)
+    private async Task<RegisterErrorType> CreateUserAsync(ApplicationUser applicationUser, string password)
     {
+        bool usernameTaken = await _users.AnyAsync(x => x.Username == applicationUser.Username);
+        if (usernameTaken)
+        {
+            return RegisterErrorType.UsernameTaken;
+        }
+
+        bool emailTaken = await _users.AnyAsync(x => x.Email == applicationUser.Email);
+        if (emailTaken)
+        {
+            return RegisterErrorType.EmailTaken;
+        }
+
+        applicationUser = applicationUser with
+        {
+            PasswordHash = hashingService.Hash(password)
+        };
+
+        _ = _users.Add(applicationUser);
+        return RegisterErrorType.None;
+    }
+
+    private void StoreRefreshToken(RefreshTokenInfo refreshTokenInfo)
+        => _ = dbContext.RefreshTokens.Add(refreshTokenInfo);
+
+    public async Task<RegisterErrorType> CompleteRegistrationAsync(ApplicationUser applicationUser, RefreshTokenInfo refreshTokenInfo, string userPassword)
+    {
+        await using IDbContextTransaction tx = await dbContext.Database.BeginTransactionAsync();
         try
         {
-            bool usernameTaken = await _users.AnyAsync(x => x.Username == applicationUser.Username);
-            if (usernameTaken)
+            RegisterErrorType result = await CreateUserAsync(applicationUser, userPassword);
+            if (result != RegisterErrorType.None)
             {
-                Log.Information("Username {Username} was already taken", applicationUser.Username);
-                return RegisterErrorType.UsernameTaken;
+                await tx.RollbackAsync();
+                return result;
             }
 
-            bool emailTaken = await _users.AnyAsync(x => x.Email == applicationUser.Email);
-            if (emailTaken)
-            {
-                Log.Information("Email {Email} was already taken", applicationUser.Email);
-                return RegisterErrorType.EmailTaken;
-            }
+            StoreRefreshToken(refreshTokenInfo);
 
-            // Hash the password after confirming the username and email are unique to avoid unnecessary hashing work in case of duplicates.
-            applicationUser = applicationUser with
-            {
-                PasswordHash = hashingService.Hash(applicationUser.PasswordHash)
-            };
+            _ = await dbContext.SaveChangesAsync();
+            await tx.CommitAsync();
 
-            _ = await _users.AddAsync(applicationUser);
-            if (await dbContext.SaveChangesAsync() > 0)
-            {
-                Log.Information("User added successfully: {@User}", applicationUser);
-                return RegisterErrorType.None;
-            }
-
-            Log.Error("Failed to create user for unknown reasons. No exceptions were thrown, but the database operation did not succeed.");
-            return RegisterErrorType.Unknown;
+            return result;
         }
         catch (DbUpdateException dbUpdateEx)
         {
@@ -105,15 +107,18 @@ public sealed class AuthRepository(
         }
         catch (NpgsqlException ex)
         {
-            Log.Error(ex, "Database error occurred while creating user.");
+            await tx.RollbackAsync();
+            Log.Error(ex, "DB error during registration for {Username}", applicationUser.Username);
             return RegisterErrorType.DbUnavailable;
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "An unexpected error occurred while creating user.");
+            await tx.RollbackAsync();
+            Log.Error(ex, "Unexpected error during registration for {Username}", applicationUser.Username);
             return RegisterErrorType.Unknown;
         }
     }
+
 
     /// <summary>
     /// Extracts a PascalCase field name from a PostgreSQL constraint name.

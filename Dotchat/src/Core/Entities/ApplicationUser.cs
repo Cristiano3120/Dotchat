@@ -17,7 +17,7 @@ public sealed record ApplicationUser
 
     // ── Security ────────────────────────────────────────────────────
     [LogMasked]
-    public string PasswordHash { get; init; } = string.Empty;
+    public byte[] PasswordHash { get; init; } = [];
     public bool TwoFactorEnabled { get; init; } = false;
     public bool EmailConfirmed { get; init; } = false;
 

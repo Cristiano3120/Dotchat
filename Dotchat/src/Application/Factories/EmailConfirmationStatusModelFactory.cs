@@ -1,7 +1,6 @@
 ﻿using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Core.Entities;
 using DotchatShared.src.Constants;
-using DotchatShared.src.Enums;
 using Microsoft.Extensions.Options;
 
 namespace DotchatServer.src.Application.Factories;
