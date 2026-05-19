@@ -40,7 +40,7 @@ public static class Program
            .Enrich.FromLogContext()
            .Destructure.UsingAttributes()
            .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {NewLine}{Exception}")
-           .MinimumLevel.Information()
+           .MinimumLevel.Is(LogEventLevel.Verbose)
            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
            .MinimumLevel.Override("System", LogEventLevel.Warning)
            .CreateLogger();

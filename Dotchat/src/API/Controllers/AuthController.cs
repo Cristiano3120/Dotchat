@@ -23,14 +23,14 @@ public sealed class AuthController(AuthService authService) : ControllerBase
     [HttpPost(Endpoints.AuthEndpoints.Login)]
     public async Task<IActionResult> LoginAsync([FromBody] LoginRequest loginRequest)
     {
-
         return Ok();
     }
 
     [HttpPost(Endpoints.AuthEndpoints.Register)]
     public async Task<IActionResult> RegisterAsync([FromBody] RegisterRequest registerRequest)
     {
-        RegisterResult registerResult = await authService.RegisterAsync(registerRequest);
+        string lang = GetClientLanguage();
+        RegisterResult registerResult = await authService.RegisterAsync(registerRequest, lang);
         return registerResult.Match(
             Ok, // Success case: return 200 OK with the result
             error => error.Type switch
@@ -42,17 +42,22 @@ public sealed class AuthController(AuthService authService) : ControllerBase
         );
     }
 
-    [Authorize]
-    [HttpGet(Endpoints.AuthEndpoints.RequestVerification)]
-    public async Task<IActionResult> RequestVerificationAsync([FromBody] int userID)
+    [HttpGet(Endpoints.AuthEndpoints.ResendConfirmation)]
+    public async Task<IActionResult> ResendConfirmationAsync([FromQuery] long userID)
     {
-        return Ok();
+        string lang = GetClientLanguage();
+        await authService.ResendVerificationEmailAsync(userID, lang);
+        return Ok("Check your emails"); //TODO: Return n template Maybe sowas wie "Check your emails"
     }
 
     [HttpGet(Endpoints.AuthEndpoints.ConfirmEmail)]
     public async Task<IActionResult> ConfirmEmailAsync([FromQuery] string token)
     {
-        string lang = HttpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture.Culture.TwoLetterISOLanguageName ?? "en";
+        string lang = GetClientLanguage();
         return Content(await authService.ConfirmEmailAsync(token, lang), contentType: "text/html"); 
     }
+
+    private string GetClientLanguage()
+        => HttpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture.Culture.TwoLetterISOLanguageName ?? "en";
+    
 }

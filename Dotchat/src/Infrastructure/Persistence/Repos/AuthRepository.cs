@@ -41,6 +41,19 @@ public sealed class AuthRepository(
         }
     }
 
+    public async Task<ApplicationUser?> GetUserByIdAsync(long userId)
+    {
+        try
+        {//TODO: Consider returning a more specific error type or using a Result<T> pattern to distinguish between "user not found" and actual errors.
+            return await _users.FirstOrDefaultAsync(x => x.Id == userId);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while retrieving user by ID {UserId}", userId);
+            return null;
+        }
+    }
+
     private async Task<RegisterErrorType> CreateUserAsync(ApplicationUser applicationUser, string password)
     {
         bool usernameTaken = await _users.AnyAsync(x => x.Username == applicationUser.Username);

@@ -11,5 +11,7 @@ public static class Templates
     {
         public const string EmailConfirmed = "EmailConfirmed";
         public const string EmailConfirmationFailed = "EmailConfirmationInvalid";
+        public const string ResendConfirmation = "ResendConfirmationEmailSuccessful";
+        public const string ResendConfirmationFailed = "ResendConfirmationEmailFailed";
     }
 }
