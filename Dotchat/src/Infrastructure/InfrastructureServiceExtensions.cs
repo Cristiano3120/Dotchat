@@ -1,4 +1,5 @@
-﻿using DotchatServer.src.Application.DTOs.EmailModels;
+﻿using DotchatServer.src.Application.DTOs;
+using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Application.DTOs.Emails;
 using DotchatServer.src.Application.Extensions;
 using DotchatServer.src.Application.Interfaces;
@@ -43,12 +44,20 @@ public static class InfrastructureServiceExtensions
                 new Func<string?, string, Email>((subject, body) => new Email(subject, body)
             )));
 
-        _ = services.AddSingleton<ITemplateFactory<string> >((services) => new TemplateFactory<string>
+        _ = services.AddSingleton<ITemplateFactory<ConfirmationEmailTemplate>>((services) => new TemplateFactory<ConfirmationEmailTemplate>
             (
                 razorEngine: services.GetRequiredService<IRazorEngine>(),
                 resxManager: ResxManager.From(env),
                 AppPath.From(env).Src().Go("EmailConfirmationTemplates"),
-                new Func<string?, string, string>((_, body) => body)
+                new Func<string?, string, ConfirmationEmailTemplate>((_, body) => new ConfirmationEmailTemplate { HtmlBody = body })
+            ));
+
+        _ = services.AddSingleton<ITemplateFactory<ResendConfirmationEmailTemplate>>((services) => new TemplateFactory<ResendConfirmationEmailTemplate>
+            (
+                razorEngine: services.GetRequiredService<IRazorEngine>(),
+                resxManager: ResxManager.From(env),
+                AppPath.From(env).Src().Go("EmailConfirmationResendTemplates"),
+                new Func<string?, string, ResendConfirmationEmailTemplate>((_, body) => new ResendConfirmationEmailTemplate { HtmlBody = body })
             ));
 
         _ = services.AddSingleton<IEmailClient, EmailClient>(services => new EmailClient(configuration.GetValue<bool>("SendEmailToFakeSMPT") 

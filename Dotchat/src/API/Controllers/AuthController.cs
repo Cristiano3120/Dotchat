@@ -44,11 +44,7 @@ public sealed class AuthController(AuthService authService) : ControllerBase
 
     [HttpGet(Endpoints.AuthEndpoints.ResendConfirmation)]
     public async Task<IActionResult> ResendConfirmationAsync([FromQuery] long userID)
-    {
-        string lang = GetClientLanguage();
-        await authService.ResendVerificationEmailAsync(userID, lang);
-        return Ok("Check your emails"); //TODO: Return n template Maybe sowas wie "Check your emails"
-    }
+        => Content(await authService.ResendVerificationEmailAsync(userID, language: GetClientLanguage()), contentType: "text/html"); 
 
     [HttpGet(Endpoints.AuthEndpoints.ConfirmEmail)]
     public async Task<IActionResult> ConfirmEmailAsync([FromQuery] string token)

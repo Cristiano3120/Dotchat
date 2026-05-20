@@ -18,6 +18,7 @@ public static class ApplicationServiceExtensions
         _ = services.AddSingletonWithWarmup<TemplatePrecompilationService>();
         _ = services.AddSingleton<IJwtService, JwtService>((_) => new JwtService(jwtSettings));
         _ = services.AddSingleton<SnowflakeGenerator>((_) => new SnowflakeGenerator(workerID));
+        _ = services.AddSingleton<ResendConfirmationEmailModelFactory>();
         _ = services.AddSingleton<EmailConfirmationStatusModelFactory>();
         _ = services.AddSingleton<VerificationEmailFactory>();
         _ = services.AddSingleton<ResxManager>((services) => ResxManager.From(env));

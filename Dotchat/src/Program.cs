@@ -3,6 +3,7 @@ using System.Text;
 
 using Destructurama;
 using DotchatServer.src.Application;
+using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Application.DTOs.JwtModels;
 using DotchatServer.src.Application.Extensions;
@@ -95,7 +96,8 @@ public static class Program
         _ = builder.Services.AddCoreServices();
         builder.Services.AddInfrastructureServices(builder.Environment, envVals, configuration: builder.Configuration);
         builder.Services.AddApplicationServices(builder.Environment, jwtSettings, workerID: builder.Configuration.GetValue<int>("WorkerID"));
-        builder.Services.AddOptions<AppSettings>().Bind(builder.Configuration.GetSection("AppSettings"));
+        _ = builder.Services.AddOptions<AppSettings>().Bind(builder.Configuration.GetSection("AppSettings"));
+        _ = builder.Services.AddOptions<ConfirmationEmailConfig>().Bind(builder.Configuration.GetSection("ConfirmationEmailConfig"));
 
         WebApplication app = builder.Build();
 

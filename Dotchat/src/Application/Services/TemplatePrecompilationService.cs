@@ -9,7 +9,10 @@ using Serilog;
 
 namespace DotchatServer.src.Application.Services;
 
-public sealed class TemplatePrecompilationService(ITemplateFactory<Email> emailFactory, ITemplateFactory<string> htmlFactory) : IWarmable
+public sealed class TemplatePrecompilationService
+    (ITemplateFactory<Email> emailFactory, 
+    ITemplateFactory<ConfirmationEmailTemplate> confirmationEmailFactory,
+    ITemplateFactory<ResendConfirmationEmailTemplate> resendConfirmationEmailTemplateFactory) : IWarmable
 {
     private IEnumerable<(string Name, Func<Language, Task> Compile)> GetAllTemplates() =>
     [
@@ -17,10 +20,13 @@ public sealed class TemplatePrecompilationService(ITemplateFactory<Email> emailF
             lang => emailFactory.CompileAsync<VerificationEmailModel>(Templates.EmailTemplates.VerificationEmail, lang.ToString())),
 
         (Templates.HtmlTemplates.EmailConfirmed,
-            lang => htmlFactory.CompileAsync<EmailConfirmationStatus>(Templates.HtmlTemplates.EmailConfirmed, lang.ToString())),
+            lang => confirmationEmailFactory.CompileAsync<EmailConfirmationStatus>(Templates.HtmlTemplates.EmailConfirmed, lang.ToString())),
 
         (Templates.HtmlTemplates.EmailConfirmationFailed,
-            lang => htmlFactory.CompileAsync<EmailConfirmationStatus>(Templates.HtmlTemplates.EmailConfirmationFailed, lang.ToString())),
+            lang => confirmationEmailFactory.CompileAsync<EmailConfirmationStatus>(Templates.HtmlTemplates.EmailConfirmationFailed, lang.ToString())),
+
+        (Templates.HtmlTemplates.ResendConfirmation,
+            lang => resendConfirmationEmailTemplateFactory.CompileAsync<ResendConfirmationEmailModel>(Templates.HtmlTemplates.ResendConfirmation, lang.ToString())),
     ];
 
     public async Task WarmupAsync()
@@ -50,7 +56,7 @@ public sealed class TemplatePrecompilationService(ITemplateFactory<Email> emailF
     }
 
 
-    private async Task CompileTemplateAsync((string Name, Func<Language, Task> Compile) template, Language language)
+    private static async Task CompileTemplateAsync((string Name, Func<Language, Task> Compile) template, Language language)
     {
         Stopwatch sw = Stopwatch.StartNew();
         await template.Compile(language);

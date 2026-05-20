@@ -12,6 +12,7 @@ using DotchatServer.src.Core.Interfaces;
 using DotchatServer.src.Core.Templates;
 using DotchatShared.src.DTOs.AuthRequests;
 using DotchatShared.src.Enums;
+using Microsoft.Extensions.Options;
 using MimeKit;
 using Serilog;
 using StackExchange.Redis;
@@ -19,11 +20,14 @@ using StackExchange.Redis;
 namespace DotchatServer.src.Application.Services;
 
 public sealed class AuthService(
+    ResendConfirmationEmailModelFactory resendConfirmationEmailModelFactory,
     EmailConfirmationStatusModelFactory emailConfirmationStatusModelFactory,
     VerificationEmailFactory verificationEmailFactory,
     SnowflakeGenerator snowflakeGenerator,
+    IOptions<ConfirmationEmailConfig> confirmationEmailConfig,
     [FromKeyedServices(HashingAlgorithm.Argon2)] IHashingService hashingService,
-    ITemplateFactory<string> htmlTemplateFactory,
+    ITemplateFactory<ResendConfirmationEmailTemplate> resendConfirmationEmailTemplateFactory,
+    ITemplateFactory<ConfirmationEmailTemplate> confirmationEmailTemplateFactory,
     ITemplateFactory<Email> emailFactory,
     IConnectionMultiplexer redisConn,
     IAuthRepository authRepository,
@@ -63,27 +67,31 @@ public sealed class AuthService(
     {
         ApplicationUser applicationUser = await authRepository.GetUserByIdAsync(userID);
         if (applicationUser is null)
+        {   //No need to return a template since a normal user can´t hit this path anyway
+            return "User not found. The link you clicked or the request you made contained a faulty userID";
+        }
+
+        if (applicationUser.EmailConfirmed)
         {
-            return "User not found";//TODO: Return Template 
-                                    //Maybe combine alle factories mit nem Inteface 
-                                    //Mach Email expiery time in die appsettings.json
-                                    //Mach das die time also sowas wie DateTime in den Templates localized ist
-                                    //Guck Claude wegen Template und überarbeite das
+            EmailConfirmationStatus emailConfirmationStatus = emailConfirmationStatusModelFactory.CreateModel(userId: applicationUser.Id, language);
+            string templateName = Templates.HtmlTemplates.EmailConfirmed;
+
+            return await confirmationEmailTemplateFactory.CreateAsync<EmailConfirmationStatus>(templateName, emailConfirmationStatus);
         }
 
         await SendVerificationEmailAsync(applicationUser, language); //Maybe mach das das nen bool returned
-        //TODO: Return Template mach ne ResendConfirmationEmailModelFactory 
-        return htmlTemplateFactory.CreateAsync<ResendConfirmationEmailSuccessfulModel>(Templates.HtmlTemplates.ResendConfirmation, );
+                                                                     
+        ResendConfirmationEmailModel model = resendConfirmationEmailModelFactory.CreateModel(applicationUser, language);
+        return await resendConfirmationEmailTemplateFactory.CreateAsync<ResendConfirmationEmailModel>(Templates.HtmlTemplates.ResendConfirmation, model);
     }
 
     private async Task SendVerificationEmailAsync(ApplicationUser applicationUser, string language)
     {
         MailboxAddress to = new(name: applicationUser.DisplayName, address: applicationUser.Email);
-        TimeSpan expiery = TimeSpan.FromMinutes(15);
-        string token = await PrepVerificationAsync(applicationUser.Id, expiery);
+        string token = await PrepVerificationAsync(applicationUser.Id, TimeSpan.FromMinutes(confirmationEmailConfig.Value.ConfirmationEmailExpiration));
 
         VerificationEmailModel verificationEmailModel =
-            verificationEmailFactory.CreateModel(applicationUser.Username, language, token, expiery);
+            verificationEmailFactory.CreateModel(applicationUser.Username, language, token);
 
         Email email = await emailFactory.CreateAsync<VerificationEmailModel>(
             templateName: Templates.EmailTemplates.VerificationEmail,
@@ -107,7 +115,7 @@ public sealed class AuthService(
         if (!userId.HasValue)
         {
             Log.Warning("Failed to confirm email with token: {Token}. Error: {Error}", token, "Invalid token");
-            return await htmlTemplateFactory.CreateAsync<EmailConfirmationStatus>(templateName, emailConfirmationStatus);
+            return await confirmationEmailTemplateFactory.CreateAsync<EmailConfirmationStatus>(templateName, emailConfirmationStatus);
         }
 
         Log.Debug("Token valid for user ID: {UserId}", userId);
@@ -119,7 +127,7 @@ public sealed class AuthService(
             templateName = Templates.HtmlTemplates.EmailConfirmed;
         }
 
-        return await htmlTemplateFactory.CreateAsync<EmailConfirmationStatus>(templateName, emailConfirmationStatus);
+        return await confirmationEmailTemplateFactory.CreateAsync<EmailConfirmationStatus>(templateName, emailConfirmationStatus);
     }
 
     private async Task<string> PrepVerificationAsync(long userID, TimeSpan expiery)
