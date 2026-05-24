@@ -62,8 +62,8 @@ public static class Program
                         Window = TimeSpan.FromMinutes(1),
                         ConnectionMultiplexerFactory = () => httpContext.RequestServices.GetRequiredService<IConnectionMultiplexer>()
                     }
-    )
-);
+                )
+            );
 
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
         });

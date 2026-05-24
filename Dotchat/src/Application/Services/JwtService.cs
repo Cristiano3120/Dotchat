@@ -25,7 +25,7 @@ internal sealed class JwtService(JwtSettings jwtSettings) : IJwtService
     /// token.</remarks>
     /// <param name="userId">The unique identifier of the user for whom the token is generated.</param>
     /// <param name="email">The email address to include in the token's claims.</param>
-    /// <returns>An object containing the generated JWT, Refresh Token and Expiery. The token includes the user ID and email as claims.</returns>
+    /// <returns>An object containing the generated JWT, Refresh Token and expiry. The token includes the user ID and email as claims.</returns>
     public JwtClientData GenerateToken(long userId, string email)
     {
         SymmetricSecurityKey key = new(key: Encoding.UTF8.GetBytes(jwtSettings.Key));
@@ -41,7 +41,7 @@ internal sealed class JwtService(JwtSettings jwtSettings) : IJwtService
             issuer: jwtSettings.Issuer,
             audience: jwtSettings.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(jwtSettings.Expiery),
+            expires: DateTime.UtcNow.AddMinutes(jwtSettings.expiry),
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
         );
 
@@ -49,7 +49,7 @@ internal sealed class JwtService(JwtSettings jwtSettings) : IJwtService
         (
             AccessToken: new JwtSecurityTokenHandler().WriteToken(token),
             RefreshToken: GenerateRefreshToken(),
-            Expiery: TimeSpan.FromMinutes(jwtSettings.Expiery)
+            expiry: TimeSpan.FromMinutes(jwtSettings.expiry)
         );
     }
 
@@ -63,5 +63,5 @@ internal sealed class JwtService(JwtSettings jwtSettings) : IJwtService
         }
     }
 
-    public TimeSpan GetDefaultExpiery() => TimeSpan.FromMinutes(jwtSettings.Expiery);
+    public TimeSpan GetDefaultexpiry() => TimeSpan.FromMinutes(jwtSettings.expiry);
 }

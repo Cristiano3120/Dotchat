@@ -12,13 +12,13 @@ public sealed class VerificationEmailModel : ITemplateNecessities
     public required string AppName { get; init; }
     public required string ConfirmUrl { get; init; }
     public string Language { get; init; }
-    public TimeSpan Expiery { get; init; }
+    public TimeSpan expiry { get; init; }
 
     /// <summary>
     /// Needed for the email template, but not actually used in the code. 
-    /// We can calculate the expiration time on the fly using the Expiery property.
+    /// We can calculate the expiration time on the fly using the expiry property.
     /// </summary>
-    public DateTime ExpiresAt => DateTime.UtcNow.Add(Expiery);
+    public DateTime ExpiresAt => DateTime.UtcNow.Add(expiry);
 
     internal VerificationEmailModel() { }
 }

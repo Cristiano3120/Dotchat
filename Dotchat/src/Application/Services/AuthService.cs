@@ -50,7 +50,7 @@ public sealed class AuthService(
         Log.Debug("Attempting to register user: {applicationUser}", applicationUser);
 
         JwtClientData jwtData = jwtService.GenerateToken(userId: applicationUser.Id, email: applicationUser.Email);
-        RefreshTokenInfo refreshTokenInfo = new(applicationUser.Id, hashingService.Hash(jwtData.RefreshToken), DateTimeOffset.UtcNow.Add(jwtData.Expiery));
+        RefreshTokenInfo refreshTokenInfo = new(applicationUser.Id, hashingService.Hash(jwtData.RefreshToken), DateTimeOffset.UtcNow.Add(jwtData.expiry));
 
         RegisterErrorType registrationResult = await authRepository.CompleteRegistrationAsync(applicationUser, refreshTokenInfo, registerRequest.Password);
 
@@ -81,7 +81,7 @@ public sealed class AuthService(
 
         await SendVerificationEmailAsync(applicationUser, language); //Maybe mach das das nen bool returned
                                                                      
-        ResendConfirmationEmailModel model = resendConfirmationEmailModelFactory.CreateModel(applicationUser, language);
+        ResendConfirmationEmailModel model = resendConfirmationEmailModelFactory.CreateModel(applicationUser, language, confirmationEmailConfig.Value.ConfirmationEmailExpiration);
         return await resendConfirmationEmailTemplateFactory.CreateAsync<ResendConfirmationEmailModel>(Templates.HtmlTemplates.ResendConfirmation, model);
     }
 
@@ -101,14 +101,14 @@ public sealed class AuthService(
         _ = await emailClient.TrySendEmailAsync(recipients: [to], email);
     }
 
-    public async Task<string> ConfirmEmailAsync(string token, string language)
+    public async Task<string> ConfirmEmailAsync(VerificationToken token, string language)
     {
         Log.Debug("Confirming email with token: {Token}", token);
         RedisValue userId = await redisConn.GetDatabase().StringGetAsync(token);
 
         string templateName = Templates.HtmlTemplates.EmailConfirmationFailed;
         EmailConfirmationStatus emailConfirmationStatus = emailConfirmationStatusModelFactory.CreateModel(
-            userId: userId.IsNull ? TryExtractUserIdFromToken(token) : (long)userId,
+            userId: token.UserId,
             language: language
         );
         
@@ -130,29 +130,19 @@ public sealed class AuthService(
         return await confirmationEmailTemplateFactory.CreateAsync<EmailConfirmationStatus>(templateName, emailConfirmationStatus);
     }
 
-    private async Task<string> PrepVerificationAsync(long userID, TimeSpan expiery)
+    /// <summary>
+    /// Creates a token that is used to verify the users email. 
+    /// The token contains the userID which can be extracted at any point
+    /// </summary>
+    /// <param name="userID"></param>
+    /// <param name="expiry">The ttl that is set in redis</param>
+    /// <returns></returns>
+    private async Task<VerificationToken> PrepVerificationAsync(long userID, TimeSpan expiry)
     {
-        byte[] data = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString() + userID.ToString());
-        string token = Convert.ToBase64String(data);
+        VerificationToken token = VerificationToken.New(userID);
 
-        _ = await redisConn.GetDatabase().StringSetAsync(key: token, value: userID, expiery);
+        _ = await redisConn.GetDatabase().StringSetAsync(key: token, value: userID, expiry);
 
-        return token;
-    }
-
-    private static long TryExtractUserIdFromToken(string token)
-    {
-        try
-        {
-            byte[] data = Convert.FromBase64String(token);
-            string result = Encoding.UTF8.GetString(data);
-
-            return long.Parse(result[Guid.NewGuid().ToString().Length..]);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Failed to extract user ID from token: {Token}", token);
-            return -1; // Return an invalid user ID to indicate failure
-        }
+        return token; 
     }
 }

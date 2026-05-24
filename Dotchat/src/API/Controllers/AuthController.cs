@@ -50,7 +50,12 @@ public sealed class AuthController(AuthService authService) : ControllerBase
     public async Task<IActionResult> ConfirmEmailAsync([FromQuery] string token)
     {
         string lang = GetClientLanguage();
-        return Content(await authService.ConfirmEmailAsync(token, lang), contentType: "text/html"); 
+        if (VerificationToken.TryParse(token, out VerificationToken verificationToken))
+        {
+            return Content(await authService.ConfirmEmailAsync(verificationToken, lang), contentType: "text/html"); 
+        }
+
+        return BadRequest("Invalid token");
     }
 
     private string GetClientLanguage()
