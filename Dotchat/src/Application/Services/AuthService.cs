@@ -29,7 +29,7 @@ public sealed class AuthService(
     ITemplateFactory<ResendConfirmationEmailTemplate> resendConfirmationEmailTemplateFactory,
     ITemplateFactory<ConfirmationEmailTemplate> confirmationEmailTemplateFactory,
     ITemplateFactory<Email> emailFactory,
-    IConnectionMultiplexer redisConn,
+    IRedisCache redisCache,
     IAuthRepository authRepository,
     IEmailClient emailClient,
     IJwtService jwtService)
@@ -53,7 +53,6 @@ public sealed class AuthService(
         RefreshTokenInfo refreshTokenInfo = new(applicationUser.Id, hashingService.Hash(jwtData.RefreshToken), DateTimeOffset.UtcNow.Add(jwtData.expiry));
 
         RegisterErrorType registrationResult = await authRepository.CompleteRegistrationAsync(applicationUser, refreshTokenInfo, registerRequest.Password);
-
         if (registrationResult != RegisterErrorType.None)
         {
             return new RegisterError(registrationResult);
@@ -63,12 +62,12 @@ public sealed class AuthService(
         return new RegisterResponse(jwtData);
     }
 
-    public async Task<string> ResendVerificationEmailAsync(long userID, string language)
+    public async Task<IHtmlRenderable> ResendVerificationEmailAsync(long userID, string language)
     {
         ApplicationUser applicationUser = await authRepository.GetUserByIdAsync(userID);
         if (applicationUser is null)
         {   //No need to return a template since a normal user can´t hit this path anyway
-            return "User not found. The link you clicked or the request you made contained a faulty userID";
+            return new RawHtmlTemplate("User not found. The link you clicked or the request you made contained a faulty userID");
         }
 
         if (applicationUser.EmailConfirmed)
@@ -79,32 +78,17 @@ public sealed class AuthService(
             return await confirmationEmailTemplateFactory.CreateAsync<EmailConfirmationStatus>(templateName, emailConfirmationStatus);
         }
 
-        await SendVerificationEmailAsync(applicationUser, language); //Maybe mach das das nen bool returned
+        await SendVerificationEmailAsync(applicationUser, language);
                                                                      
         ResendConfirmationEmailModel model = resendConfirmationEmailModelFactory.CreateModel(applicationUser, language, confirmationEmailConfig.Value.ConfirmationEmailExpiration);
         return await resendConfirmationEmailTemplateFactory.CreateAsync<ResendConfirmationEmailModel>(Templates.HtmlTemplates.ResendConfirmation, model);
     }
 
-    private async Task SendVerificationEmailAsync(ApplicationUser applicationUser, string language)
-    {
-        MailboxAddress to = new(name: applicationUser.DisplayName, address: applicationUser.Email);
-        string token = await PrepVerificationAsync(applicationUser.Id, TimeSpan.FromMinutes(confirmationEmailConfig.Value.ConfirmationEmailExpiration));
 
-        VerificationEmailModel verificationEmailModel =
-            verificationEmailFactory.CreateModel(applicationUser.Username, language, token);
-
-        Email email = await emailFactory.CreateAsync<VerificationEmailModel>(
-            templateName: Templates.EmailTemplates.VerificationEmail,
-            model: verificationEmailModel
-        );
-
-        _ = await emailClient.TrySendEmailAsync(recipients: [to], email);
-    }
-
-    public async Task<string> ConfirmEmailAsync(VerificationToken token, string language)
+    public async Task<IHtmlRenderable> ConfirmEmailAsync(VerificationToken token, string language)
     {
         Log.Debug("Confirming email with token: {Token}", token);
-        RedisValue userId = await redisConn.GetDatabase().StringGetAsync(token);
+        RedisValue userId = await redisCache.GetAsync(token);
 
         string templateName = Templates.HtmlTemplates.EmailConfirmationFailed;
         EmailConfirmationStatus emailConfirmationStatus = emailConfirmationStatusModelFactory.CreateModel(
@@ -123,11 +107,27 @@ public sealed class AuthService(
         bool emailConfirmed = await authRepository.ConfirmEmailAsync((long)userId);
         if (emailConfirmed)
         {
-            _ = await redisConn.GetDatabase().KeyDeleteAsync(token);
+            _ = await redisCache.DeleteAsync(token);//TODO: Handle the case that this fails
             templateName = Templates.HtmlTemplates.EmailConfirmed;
         }
 
         return await confirmationEmailTemplateFactory.CreateAsync<EmailConfirmationStatus>(templateName, emailConfirmationStatus);
+    }
+
+    private async Task SendVerificationEmailAsync(ApplicationUser applicationUser, string language)
+    {
+        MailboxAddress to = new(name: applicationUser.DisplayName, address: applicationUser.Email);
+        VerificationToken token = await PrepVerificationAsync(applicationUser.Id);
+
+        VerificationEmailModel verificationEmailModel = verificationEmailFactory.CreateModel(applicationUser.Username, language, token);
+
+        Email email = await emailFactory.CreateAsync<VerificationEmailModel>(
+            templateName: Templates.EmailTemplates.VerificationEmail,
+            model: verificationEmailModel
+        );
+
+        Log.Debug("Sending verification email to {Email} with token: {Token}", applicationUser.Email, token);
+        _ = await emailClient.TrySendEmailAsync(recipients: [to], email);
     }
 
     /// <summary>
@@ -137,11 +137,12 @@ public sealed class AuthService(
     /// <param name="userID"></param>
     /// <param name="expiry">The ttl that is set in redis</param>
     /// <returns></returns>
-    private async Task<VerificationToken> PrepVerificationAsync(long userID, TimeSpan expiry)
+    private async Task<VerificationToken> PrepVerificationAsync(long userID)
     {
         VerificationToken token = VerificationToken.New(userID);
+        TimeSpan expiry = TimeSpan.FromMinutes(confirmationEmailConfig.Value.ConfirmationEmailExpiration);
 
-        _ = await redisConn.GetDatabase().StringSetAsync(key: token, value: userID, expiry);
+        _ = await redisCache.SetAsync(key: token, value: userID, expiry);//TODO: Handle the case that this fails
 
         return token; 
     }

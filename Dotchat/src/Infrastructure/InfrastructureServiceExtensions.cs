@@ -35,6 +35,7 @@ public static class InfrastructureServiceExtensions
             return ConnectionMultiplexer.Connect(conf);
         });
 
+        _ = services.AddSingleton<IRedisCache, RedisCache>();
         _ = services.AddSingleton<IRazorEngine, RazorEngine>();
         _ = services.AddSingleton<ITemplateFactory<Email>, TemplateFactory<Email>>((services) => new TemplateFactory<Email>
             (

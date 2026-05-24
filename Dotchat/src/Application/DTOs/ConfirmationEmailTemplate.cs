@@ -1,8 +1,9 @@
-﻿namespace DotchatServer.src.Application.DTOs;
+﻿using DotchatServer.src.Application.Interfaces;
 
-public sealed class ConfirmationEmailTemplate
+namespace DotchatServer.src.Application.DTOs;
+
+public sealed class ConfirmationEmailTemplate : IHtmlRenderable<ConfirmationEmailTemplate>
 {
-    public string HtmlBody { get; init; }
-
+    public string HtmlBody { get; init; } = string.Empty;
     public static implicit operator string(ConfirmationEmailTemplate template) => template.HtmlBody;
 }

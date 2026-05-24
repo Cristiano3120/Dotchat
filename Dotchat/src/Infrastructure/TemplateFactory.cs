@@ -16,7 +16,7 @@ namespace DotchatServer.src.Infrastructure;
 /// <param name="appPath"></param>
 /// <param name="baseFolderPath"></param>
 /// <param name="factory">The factory function for creating the return type. The first parameter is the subject which is optional(only used for emails), and the second is the HTML body.</param>
-public class TemplateFactory<TReturn>: ITemplateFactory<TReturn> where TReturn : class
+public class TemplateFactory<TReturn>: ITemplateFactory<TReturn> where TReturn : class, IHtmlRenderable<TReturn>
 {
     private readonly ConcurrentDictionary<string, object> _templateCaches = new();
     private readonly ConcurrentDictionary<string, DateTime> _lastCacheUpdates = new();
@@ -42,15 +42,13 @@ public class TemplateFactory<TReturn>: ITemplateFactory<TReturn> where TReturn :
     public async Task<TReturn> CreateAsync<TModel>(string templateName, TModel model)
         where TModel : ITemplateNecessities
     {
-        string cacheKey = await CompileAsync<TModel>(templateName, model.Language);
-
-        IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>> template = (IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>>)_templateCaches[cacheKey];
+        IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>> template = await CompileAsync<TModel>(templateName, model.Language);
         string htmlBody = await template.RunAsync(instance => instance.Model = model);
 
         return _factory(GetSubject(templateName, model.Language), htmlBody);
     }
 
-    public async Task<string> CompileAsync<TModel>(string templateName, string language)
+    public async ValueTask<IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>>> CompileAsync<TModel>(string templateName, string language)
         where TModel : ITemplateNecessities
     {
         string cacheKey = $"{language}_{templateName}";
@@ -97,7 +95,7 @@ public class TemplateFactory<TReturn>: ITemplateFactory<TReturn> where TReturn :
             }
         }
 
-        return cacheKey;
+        return (IRazorEngineCompiledTemplate<RazorEngineTemplateBase<TModel>>)_templateCaches[cacheKey];
     }
 
     /// <summary>

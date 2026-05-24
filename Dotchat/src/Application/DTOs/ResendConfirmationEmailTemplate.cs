@@ -1,6 +1,8 @@
-﻿namespace DotchatServer.src.Application.DTOs;
+﻿using DotchatServer.src.Application.Interfaces;
 
-public sealed record ResendConfirmationEmailTemplate
+namespace DotchatServer.src.Application.DTOs;
+
+public sealed record ResendConfirmationEmailTemplate : IHtmlRenderable<ResendConfirmationEmailTemplate>
 {
     public string HtmlBody { get; init; } = string.Empty;
 

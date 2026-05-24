@@ -1,6 +1,7 @@
 ﻿using System.Net;
 
 using DotchatServer.src.Application.DTOs;
+using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Application.Services;
 using DotchatServer.src.Constants;
 
@@ -44,7 +45,10 @@ public sealed class AuthController(AuthService authService) : ControllerBase
 
     [HttpGet(Endpoints.AuthEndpoints.ResendConfirmation)]
     public async Task<IActionResult> ResendConfirmationAsync([FromQuery] long userID)
-        => Content(await authService.ResendVerificationEmailAsync(userID, language: GetClientLanguage()), contentType: "text/html"); 
+    {
+        IHtmlRenderable template = await authService.ResendVerificationEmailAsync(userID, language: GetClientLanguage());
+        return Content(template.HtmlBody, ContentType.Html);
+    }
 
     [HttpGet(Endpoints.AuthEndpoints.ConfirmEmail)]
     public async Task<IActionResult> ConfirmEmailAsync([FromQuery] string token)
@@ -52,13 +56,13 @@ public sealed class AuthController(AuthService authService) : ControllerBase
         string lang = GetClientLanguage();
         if (VerificationToken.TryParse(token, out VerificationToken verificationToken))
         {
-            return Content(await authService.ConfirmEmailAsync(verificationToken, lang), contentType: "text/html"); 
+            IHtmlRenderable template = await authService.ConfirmEmailAsync(verificationToken, lang);
+            return Content(template.HtmlBody, ContentType.Html); 
         }
 
         return BadRequest("Invalid token");
     }
 
-    private string GetClientLanguage()
-        => HttpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture.Culture.TwoLetterISOLanguageName ?? "en";
+    private string GetClientLanguage() => HttpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture.Culture.TwoLetterISOLanguageName ?? "en";
     
 }
