@@ -10,23 +10,23 @@ using Serilog;
 namespace DotchatServer.src.Application.Services;
 
 public sealed class TemplatePrecompilationService
-    (ITemplateFactory<Email> emailFactory, 
+    (ITemplateFactory<Email> emailFactory,
     ITemplateFactory<ConfirmationEmailTemplate> confirmationEmailFactory,
     ITemplateFactory<ResendConfirmationEmailTemplate> resendConfirmationEmailTemplateFactory) : IWarmable
 {
-    private IEnumerable<(string Name, Func<Language, Task> Compile)> GetAllTemplates() =>
+    private IEnumerable<(string Name, Func<Language, ValueTask> Compile)> GetAllTemplates() =>
     [
         (Templates.EmailTemplates.VerificationEmail,
-            lang => emailFactory.CompileAsync<VerificationEmailModel>(Templates.EmailTemplates.VerificationEmail, lang.ToString())),
+            async lang => await emailFactory.CompileAsync<VerificationEmailModel>(Templates.EmailTemplates.VerificationEmail, lang.ToString())),
 
         (Templates.HtmlTemplates.EmailConfirmed,
-            lang => confirmationEmailFactory.CompileAsync<EmailConfirmationStatus>(Templates.HtmlTemplates.EmailConfirmed, lang.ToString())),
+            async lang => await confirmationEmailFactory.CompileAsync<EmailConfirmationStatus>(Templates.HtmlTemplates.EmailConfirmed, lang.ToString())),
 
         (Templates.HtmlTemplates.EmailConfirmationFailed,
-            lang => confirmationEmailFactory.CompileAsync<EmailConfirmationStatus>(Templates.HtmlTemplates.EmailConfirmationFailed, lang.ToString())),
+            async lang => await confirmationEmailFactory.CompileAsync<EmailConfirmationStatus>(Templates.HtmlTemplates.EmailConfirmationFailed, lang.ToString())),
 
         (Templates.HtmlTemplates.ResendConfirmation,
-            lang => resendConfirmationEmailTemplateFactory.CompileAsync<ResendConfirmationEmailModel>(Templates.HtmlTemplates.ResendConfirmation, lang.ToString())),
+            async lang => await resendConfirmationEmailTemplateFactory.CompileAsync<ResendConfirmationEmailModel>(Templates.HtmlTemplates.ResendConfirmation, lang.ToString())),
     ];
 
     public async Task WarmupAsync()
@@ -56,7 +56,7 @@ public sealed class TemplatePrecompilationService
     }
 
 
-    private static async Task CompileTemplateAsync((string Name, Func<Language, Task> Compile) template, Language language)
+    private static async Task CompileTemplateAsync((string Name, Func<Language, ValueTask> Compile) template, Language language)
     {
         Stopwatch sw = Stopwatch.StartNew();
         await template.Compile(language);

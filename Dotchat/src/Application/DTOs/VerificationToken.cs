@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.Buffers.Binary;
+using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.WebUtilities;
 using StackExchange.Redis;
 
 namespace DotchatServer.src.Application.DTOs;
@@ -14,6 +16,7 @@ public readonly record struct VerificationToken
 {
     public long UserId { get; init; }
     public Guid RandomIdentifier { get; init; }
+    public static VerificationToken Empty => new();
 
     /// <summary>
     /// Creates a new VerificationToken containing the UserID and <see cref="Guid.NewGuid"/> as the random identifier.
@@ -30,20 +33,26 @@ public readonly record struct VerificationToken
     {
         try
         {
-            byte[] data = Convert.FromBase64String(token);
-            string result = Encoding.UTF8.GetString(data);
-
+            int GuidSize = Unsafe.SizeOf<Guid>();
+            Span<byte> data = WebEncoders.Base64UrlDecode(token);
+            
+            if (data.Length != GuidSize + sizeof(long))
+            {
+                verificationToken = Empty;
+                return false;
+            }
+            
             verificationToken = new VerificationToken
             {
-                RandomIdentifier = Guid.Parse(result[..Guid.NewGuid().ToString().Length]),
-                UserId = long.Parse(result[Guid.NewGuid().ToString().Length..])
+                RandomIdentifier = new(data[..GuidSize]),
+                UserId = BinaryPrimitives.ReadInt64LittleEndian(data[GuidSize..])
             };
 
             return true;
         }
         catch
         {
-            verificationToken = default;
+            verificationToken = Empty;
             return false;
         }
     }
@@ -57,7 +66,12 @@ public readonly record struct VerificationToken
     /// <returns></returns>
     public override string ToString()
     {
-        byte[] data = Encoding.UTF8.GetBytes(RandomIdentifier.ToString() + UserId.ToString());
-        return Convert.ToBase64String(data);
+        Span<byte> bytes = stackalloc byte[Unsafe.SizeOf<Guid>() + sizeof(long)];
+        _ = RandomIdentifier.TryWriteBytes(bytes); //Write the GUID into the span
+
+        //Writes the user ID as little-endian bytes immediately following the GUID bytes.
+        BinaryPrimitives.WriteInt64LittleEndian(bytes[16..], UserId);
+        
+        return WebEncoders.Base64UrlEncode(bytes);
     }
 }

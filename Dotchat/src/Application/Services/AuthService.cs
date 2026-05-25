@@ -1,5 +1,4 @@
-﻿using System.Text;
-using DotchatServer.src.Application.DTOs;
+﻿using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Application.DTOs.Emails;
 using DotchatServer.src.Application.DTOs.JwtModels;
@@ -8,6 +7,7 @@ using DotchatServer.src.Application.Factories;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Application.Interfaces.Security;
 using DotchatServer.src.Core.Entities;
+using DotchatServer.src.Core.Extensions;
 using DotchatServer.src.Core.Interfaces;
 using DotchatServer.src.Core.Templates;
 using DotchatShared.src.DTOs.AuthRequests;
@@ -15,7 +15,6 @@ using DotchatShared.src.Enums;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using Serilog;
-using StackExchange.Redis;
 
 namespace DotchatServer.src.Application.Services;
 
@@ -58,13 +57,15 @@ public sealed class AuthService(
             return new RegisterError(registrationResult);
         }
 
-        await SendVerificationEmailAsync(applicationUser, language);
+        //We dont care if the email was sent successfully or not at this point, the user is registered either way and can request a new verification email if needed
+        TrySendVerificationEmailAsync(applicationUser, language).FireAndForget();
+
         return new RegisterResponse(jwtData);
     }
 
     public async Task<IHtmlRenderable> ResendVerificationEmailAsync(long userID, string language)
     {
-        ApplicationUser applicationUser = await authRepository.GetUserByIdAsync(userID);
+        ApplicationUser? applicationUser = await authRepository.GetUserByIdAsync(userID);
         if (applicationUser is null)
         {   //No need to return a template since a normal user can´t hit this path anyway
             return new RawHtmlTemplate("User not found. The link you clicked or the request you made contained a faulty userID");
@@ -78,17 +79,16 @@ public sealed class AuthService(
             return await confirmationEmailTemplateFactory.CreateAsync<EmailConfirmationStatus>(templateName, emailConfirmationStatus);
         }
 
-        await SendVerificationEmailAsync(applicationUser, language);
+        //We dont care if the email was sent successfully or not at this point, the user is registered either way and can request a new verification email if needed
+        TrySendVerificationEmailAsync(applicationUser, language).FireAndForget();
                                                                      
         ResendConfirmationEmailModel model = resendConfirmationEmailModelFactory.CreateModel(applicationUser, language, confirmationEmailConfig.Value.ConfirmationEmailExpiration);
         return await resendConfirmationEmailTemplateFactory.CreateAsync<ResendConfirmationEmailModel>(Templates.HtmlTemplates.ResendConfirmation, model);
     }
 
-
     public async Task<IHtmlRenderable> ConfirmEmailAsync(VerificationToken token, string language)
     {
         Log.Debug("Confirming email with token: {Token}", token);
-        RedisValue userId = await redisCache.GetAsync(token);
 
         string templateName = Templates.HtmlTemplates.EmailConfirmationFailed;
         EmailConfirmationStatus emailConfirmationStatus = emailConfirmationStatusModelFactory.CreateModel(
@@ -96,28 +96,34 @@ public sealed class AuthService(
             language: language
         );
         
-        if (!userId.HasValue)
+        if (!await redisCache.ExistsAsync(token))
         {
             Log.Warning("Failed to confirm email with token: {Token}. Error: {Error}", token, "Invalid token");
             return await confirmationEmailTemplateFactory.CreateAsync<EmailConfirmationStatus>(templateName, emailConfirmationStatus);
         }
 
-        Log.Debug("Token valid for user ID: {UserId}", userId);
+        Log.Debug("Token valid for user ID: {UserId}", token.UserId);
 
-        bool emailConfirmed = await authRepository.ConfirmEmailAsync((long)userId);
+        bool emailConfirmed = await authRepository.ConfirmEmailAsync(token.UserId);
         if (emailConfirmed)
         {
-            _ = await redisCache.DeleteAsync(token);//TODO: Handle the case that this fails
+            _ = await redisCache.DeleteAsync(token);
             templateName = Templates.HtmlTemplates.EmailConfirmed;
         }
 
         return await confirmationEmailTemplateFactory.CreateAsync<EmailConfirmationStatus>(templateName, emailConfirmationStatus);
     }
 
-    private async Task SendVerificationEmailAsync(ApplicationUser applicationUser, string language)
+    private async Task<bool> TrySendVerificationEmailAsync(ApplicationUser applicationUser, string language)
     {
         MailboxAddress to = new(name: applicationUser.DisplayName, address: applicationUser.Email);
-        VerificationToken token = await PrepVerificationAsync(applicationUser.Id);
+        (bool success, VerificationToken token) = await PrepVerificationAsync(applicationUser.Id);
+
+        if (!success)
+        {
+            Log.Warning("Failed to prepare verification for user ID: {UserID}. Email not sent.", applicationUser.Id);
+            return false;
+        }
 
         VerificationEmailModel verificationEmailModel = verificationEmailFactory.CreateModel(applicationUser.Username, language, token);
 
@@ -126,8 +132,15 @@ public sealed class AuthService(
             model: verificationEmailModel
         );
 
-        Log.Debug("Sending verification email to {Email} with token: {Token}", applicationUser.Email, token);
-        _ = await emailClient.TrySendEmailAsync(recipients: [to], email);
+        success = await emailClient.TrySendEmailAsync(recipients: [to], email);
+        if (!success)
+        {
+            Log.Warning("Failed to send verification email to user ID: {UserID} at email: {Email}", applicationUser.Id, applicationUser.Email);
+            return false;
+        }
+
+        Log.Debug("Sent verification email to {Email} with token: {Token}", applicationUser.Email, token);
+        return true;
     }
 
     /// <summary>
@@ -137,13 +150,17 @@ public sealed class AuthService(
     /// <param name="userID"></param>
     /// <param name="expiry">The ttl that is set in redis</param>
     /// <returns></returns>
-    private async Task<VerificationToken> PrepVerificationAsync(long userID)
+    private async Task<(bool success, VerificationToken token)> PrepVerificationAsync(long userID)
     {
         VerificationToken token = VerificationToken.New(userID);
         TimeSpan expiry = TimeSpan.FromMinutes(confirmationEmailConfig.Value.ConfirmationEmailExpiration);
 
-        _ = await redisCache.SetAsync(key: token, value: userID, expiry);//TODO: Handle the case that this fails
+        if (!await redisCache.SetAsync(key: token, value: userID, expiry))
+        {
+            Log.Warning("Failed to set verification token in Redis for user ID: {UserID}", userID);
+            return (false, VerificationToken.Empty);
+        }
 
-        return token; 
+        return (true, token); 
     }
 }

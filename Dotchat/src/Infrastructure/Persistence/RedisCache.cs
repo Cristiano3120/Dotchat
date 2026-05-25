@@ -1,5 +1,4 @@
 ﻿using DotchatServer.src.Application.Interfaces;
-using Org.BouncyCastle.Utilities;
 using Serilog;
 using StackExchange.Redis;
 
@@ -9,7 +8,20 @@ public sealed class RedisCache(IConnectionMultiplexer redisConn) : IRedisCache
 {
     private readonly IDatabase _database = redisConn.GetDatabase();
 
-    public async Task<bool> SetAsync(string key, string value, TimeSpan expiry)
+    public async Task<bool> ExistsAsync(RedisKey key)
+    {
+        try
+        {
+            return await _database.KeyExistsAsync(key);
+        }
+        catch (RedisException ex)
+        {
+            Log.Error(ex, "Failed to check existence of key in Redis cache: {Key}", key);
+            return false;
+        }
+    }
+
+    public async Task<bool> SetAsync(RedisKey key, RedisValue value, TimeSpan expiry)
     {
         try
         {
@@ -22,7 +34,7 @@ public sealed class RedisCache(IConnectionMultiplexer redisConn) : IRedisCache
         }
     }
 
-    public async Task<RedisValue> GetAsync<TReturn>(RedisKey key)
+    public async Task<RedisValue> GetAsync(RedisKey key)
     {
         try
         {

@@ -8,5 +8,5 @@ public interface IAuthRepository
 {
     Task<bool> ConfirmEmailAsync(long userId);
     Task<RegisterErrorType> CompleteRegistrationAsync(ApplicationUser applicationUser, RefreshTokenInfo refreshTokenInfo, string userPassword);
-    Task<ApplicationUser> GetUserByIdAsync(long userID);
+    Task<ApplicationUser?> GetUserByIdAsync(long userID);
 }
