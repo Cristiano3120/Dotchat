@@ -20,6 +20,7 @@ public static class ApplicationServiceExtensions
         _ = services.AddSingleton<SnowflakeGenerator>((_) => new SnowflakeGenerator(workerID));
         _ = services.AddSingleton<ResendConfirmationEmailModelFactory>();
         _ = services.AddSingleton<EmailConfirmationStatusModelFactory>();
+        _ = services.AddSingleton<EmailConfirmationFailedModelFactory>();
         _ = services.AddSingleton<VerificationEmailFactory>();
         _ = services.AddSingleton<ResxManager>((services) => ResxManager.From(env));
         _ = services.AddScoped<AuthService>();

@@ -1,5 +1,8 @@
 ﻿namespace DotchatServer.src.Application.Enums;
 
+/// <summary>
+/// Represents all available hashing algorithms
+/// </summary>
 public enum HashingAlgorithm : byte
 {
     /// <summary>

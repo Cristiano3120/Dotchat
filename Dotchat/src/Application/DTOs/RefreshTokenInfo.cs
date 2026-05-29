@@ -1,5 +1,8 @@
 ﻿namespace DotchatServer.src.Application.DTOs;
 
+/// <summary>
+/// Contains information about a refresh token, including its unique identifier, associated user ID, hashed token value, expiration time, and creation time.
+/// </summary>
 public sealed record RefreshTokenInfo
 {
     public Guid Id { get; private set; }

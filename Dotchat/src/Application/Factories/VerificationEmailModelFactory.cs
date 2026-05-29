@@ -16,7 +16,7 @@ public sealed class VerificationEmailFactory(IOptions<AppSettings> options, IOpt
         Name = name,
         AppName = _settings.AppName,
         ConfirmUrl = $"{_settings.WebAddress}/{Endpoints.AuthEndpoints.ConfirmEmailEndpoint}?token={token}",
-        expiry = TimeSpan.FromMinutes(_confirmationEmailConfig.ConfirmationEmailExpiration),
+        Expiry = TimeSpan.FromMinutes(_confirmationEmailConfig.ConfirmationEmailExpiration),
         Language = language
     };
 }

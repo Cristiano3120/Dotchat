@@ -1,6 +1,12 @@
 ﻿namespace DotchatServer.src.Application.DTOs;
 
-public sealed class ConfirmationEmailConfig
+/// <summary>
+/// Contains configuration settings for confirmation emails, such as the expiration time for confirmation links.
+/// </summary>
+public sealed record ConfirmationEmailConfig
 {
-    public int ConfirmationEmailExpiration { get; init; } // in minutes
+    /// <summary>
+    /// The expiration time for confirmation emails, in minutes.
+    /// </summary>
+    public required int ConfirmationEmailExpiration;
 }

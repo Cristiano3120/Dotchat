@@ -12,7 +12,8 @@ namespace DotchatServer.src.Application.Services;
 public sealed class TemplatePrecompilationService
     (ITemplateFactory<Email> emailFactory,
     ITemplateFactory<ConfirmationEmailTemplate> confirmationEmailFactory,
-    ITemplateFactory<ResendConfirmationEmailTemplate> resendConfirmationEmailTemplateFactory) : IWarmable
+    ITemplateFactory<ResendConfirmationEmailTemplate> resendConfirmationEmailTemplateFactory,
+    ITemplateFactory<ConfirmationFailedEmailTemplate> confirmationFailedEmailTemplateFactory) : IWarmable
 {
     private IEnumerable<(string Name, Func<Language, ValueTask> Compile)> GetAllTemplates() =>
     [
@@ -20,10 +21,10 @@ public sealed class TemplatePrecompilationService
             async lang => await emailFactory.CompileAsync<VerificationEmailModel>(Templates.EmailTemplates.VerificationEmail, lang.ToString())),
 
         (Templates.HtmlTemplates.EmailConfirmed,
-            async lang => await confirmationEmailFactory.CompileAsync<EmailConfirmationStatus>(Templates.HtmlTemplates.EmailConfirmed, lang.ToString())),
+            async lang => await confirmationEmailFactory.CompileAsync<EmailConfirmedModel>(Templates.HtmlTemplates.EmailConfirmed, lang.ToString())),
 
         (Templates.HtmlTemplates.EmailConfirmationFailed,
-            async lang => await confirmationEmailFactory.CompileAsync<EmailConfirmationStatus>(Templates.HtmlTemplates.EmailConfirmationFailed, lang.ToString())),
+            async lang => await confirmationFailedEmailTemplateFactory.CompileAsync<EmailConfirmationFailedModel>(Templates.HtmlTemplates.EmailConfirmationFailed, lang.ToString())),
 
         (Templates.HtmlTemplates.ResendConfirmation,
             async lang => await resendConfirmationEmailTemplateFactory.CompileAsync<ResendConfirmationEmailModel>(Templates.HtmlTemplates.ResendConfirmation, lang.ToString())),

@@ -15,6 +15,12 @@ namespace DotchatServer.src.Application.DTOs;
 public readonly record struct VerificationToken
 {
     public long UserId { get; init; }
+
+    /// <summary>
+    /// A random identifier,  that is combined with the UserId to create a unique token. 
+    /// This ensures that even if the same user requests multiple tokens, each token will be unique and can be invalidated independently.
+    /// Additionally, the random identifier adds an extra layer of security by making the token harder to guess or forge, as it is not solely based on the user ID.
+    /// </summary>
     public Guid RandomIdentifier { get; init; }
     public static VerificationToken Empty => new();
 
@@ -29,6 +35,16 @@ public readonly record struct VerificationToken
         RandomIdentifier = Guid.NewGuid()
     };
 
+    /// <summary>
+    /// Parses a Base64 URL-encoded verification token into a <see cref="VerificationToken"/> by decoding the token and extracting a
+    /// GUID-sized random identifier followed by a little-endian 64-bit user identifier.
+    /// </summary>
+    /// <remarks>Decoding or format errors are caught and cause the method to return false with
+    /// verificationToken set to VerificationToken.Empty.</remarks>
+    /// <param name="token">Base64 URL-encoded token containing a GUID-sized random identifier followed by a 64-bit little-endian user
+    /// identifier.</param>
+    /// <param name="verificationToken">When true is returned, contains the parsed VerificationToken; otherwise set to VerificationToken.Empty.</param>
+    /// <returns>True if the token was decoded and matched the expected format and length; otherwise false.</returns>
     public static bool TryParse(string token, out VerificationToken verificationToken)
     {
         try
@@ -57,8 +73,6 @@ public readonly record struct VerificationToken
         }
     }
 
-    public static implicit operator string(VerificationToken token) => token.ToString();
-    public static implicit operator RedisKey(VerificationToken token) => token.ToString();
 
     /// <summary>
     /// Formats the token as a base64 string containing the random identifier and the user ID.
@@ -66,12 +80,17 @@ public readonly record struct VerificationToken
     /// <returns></returns>
     public override string ToString()
     {
-        Span<byte> bytes = stackalloc byte[Unsafe.SizeOf<Guid>() + sizeof(long)];
+        int GuidSize = Unsafe.SizeOf<Guid>();
+
+        Span<byte> bytes = stackalloc byte[GuidSize + sizeof(long)];
         _ = RandomIdentifier.TryWriteBytes(bytes); //Write the GUID into the span
 
         //Writes the user ID as little-endian bytes immediately following the GUID bytes.
-        BinaryPrimitives.WriteInt64LittleEndian(bytes[16..], UserId);
+        BinaryPrimitives.WriteInt64LittleEndian(bytes[GuidSize..], UserId);
         
         return WebEncoders.Base64UrlEncode(bytes);
     }
+    
+    public static implicit operator string(VerificationToken token) => token.ToString();
+    public static implicit operator RedisKey(VerificationToken token) => token.ToString();
 }

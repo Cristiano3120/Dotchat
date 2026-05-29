@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Resources;
 using DotchatServer.src.Core;
-using DotchatShared.src.Enums;
 
 namespace DotchatServer.src.Application.Services;
 
@@ -44,7 +43,7 @@ public sealed class ResxManager : NavigableBase<ResxManager>
     {
         if (_resourceManager is null)
         {
-            throw new InvalidOperationException($"Call {nameof(File)} before {nameof(GetString)}.");
+            throw new InvalidOperationException($"Call {nameof(File)}() before {nameof(GetString)}().");
         }
 
         return _resourceManager.GetString(key, new CultureInfo(language.ToString())) 

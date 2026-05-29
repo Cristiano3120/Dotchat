@@ -20,6 +20,14 @@ public partial class RegisterResult : OneOfBase<RegisterResponse, RegisterError>
     public static implicit operator RegisterResult(RegisterError _) => new(_);
 }
 
+/// <summary>
+/// Represents a successful registration response containing JWT client data.
+/// </summary>
+/// <param name="JwtClientData">The JWT client data associated with the successful registration.</param>
 public sealed record RegisterResponse(JwtClientData JwtClientData);
 
+/// <summary>
+/// Represents an error that occurred during the registration process, containing the type of error that occurred.
+/// </summary>
+/// <param name="Type">The type of error that occurred during registration.</param>
 public sealed record RegisterError(RegisterErrorType Type);

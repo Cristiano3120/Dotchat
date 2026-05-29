@@ -2,20 +2,14 @@ using System.Globalization;
 using System.Text;
 
 using Destructurama;
-using DotchatServer.src.Application;
 using DotchatServer.src.Application.DTOs;
-using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Application.DTOs.JwtModels;
 using DotchatServer.src.Application.Extensions;
 using DotchatServer.src.Application.Interfaces;
-using DotchatServer.src.Application.Services;
 using DotchatServer.src.Constants;
 using DotchatServer.src.Core.Entities;
 using DotchatServer.src.Core.Extensions;
-using DotchatServer.src.Core.Interfaces;
-using DotchatServer.src.Core.Templates;
 using DotchatServer.src.Infrastructure;
-using DotchatShared.src.Enums;
 using DotNetEnv;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -23,12 +17,10 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using MimeKit;
 using RedisRateLimiting;
 
 using Serilog;
 using Serilog.Events;
-using Sprache;
 using StackExchange.Redis;
 
 namespace DotchatServer.src;
@@ -67,7 +59,7 @@ public static class Program
 
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
         });
-
+        
         JwtSettings jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()
             ?? throw new InvalidOperationException("Failed to bind JwtSettings from configuration.");
 
