@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DotchatServer.src.Infrastructure.Persistence;
 
-public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+internal sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<ApplicationUser> Users { get; set; }
     public DbSet<RefreshTokenInfo> RefreshTokens { get; set; }

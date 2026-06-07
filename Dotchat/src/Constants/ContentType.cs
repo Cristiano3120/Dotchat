@@ -1,6 +1,9 @@
 ﻿namespace DotchatServer.src.Constants;
 
-public static class ContentType
+/// <summary>
+/// Defines constants for content types used in HTTP responses.
+/// </summary>
+internal static class ContentType
 {
     public const string Html = "text/html";
     public const string Json = "application/json";

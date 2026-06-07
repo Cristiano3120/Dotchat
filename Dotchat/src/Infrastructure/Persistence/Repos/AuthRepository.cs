@@ -14,13 +14,13 @@ using Serilog;
 
 namespace DotchatServer.src.Infrastructure.Persistence.Repos;
 
-public sealed class AuthRepository(
+internal sealed class AuthRepository(
     [FromKeyedServices(HashingAlgorithm.Argon2)] IHashingService hashingService,
     AppDbContext dbContext) : IAuthRepository
 {
     private readonly DbSet<ApplicationUser> _users = dbContext.Users;
 
-    public async Task<bool> ConfirmEmailAsync(long userId)
+    public async Task<Result<bool>> ConfirmEmailAsync(long userId)
     {
         try
         {
@@ -28,16 +28,16 @@ public sealed class AuthRepository(
             if (affectedRows > 0)
             {
                 Log.Information("Email confirmed successfully for user {UserId}", userId);
-                return true;
+                return Result<bool>.Success(true);
             }
 
-            Log.Error("Failed to confirm email for user {UserId}. No rows were affected, which likely means the user does not exist.", userId);
-            return false;
+            Log.Error("Failed to confirm email for user {UserId}. No rows were affected, which either means the user does not exist or the email is already confirmed.", userId);
+            return Result<bool>.Success(false);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "An error occurred while confirming email for user {UserId}", userId);
-            return false;
+            return Result<bool>.Failure(ex);
         }
     }
 

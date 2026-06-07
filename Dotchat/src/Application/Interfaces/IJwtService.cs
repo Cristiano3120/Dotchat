@@ -2,7 +2,7 @@
 
 namespace DotchatServer.src.Application.Interfaces;
 
-public interface IJwtService
+internal interface IJwtService
 {
     public JwtClientData GenerateToken(long userId, string email);
 }

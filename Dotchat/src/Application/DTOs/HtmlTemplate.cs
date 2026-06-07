@@ -8,5 +8,8 @@ namespace DotchatServer.src.Application.DTOs;
 /// <param name="HtmlBody">The HTML content of the template</param>
 public sealed record HtmlTemplate(string HtmlBody) : IHtmlRenderable<HtmlTemplate>
 {
+    /// <summary>
+    /// Enables implicit conversion of an HtmlTemplate object to a string by returning its HtmlBody property.
+    /// </summary>
     public static implicit operator string(HtmlTemplate value) => value.HtmlBody;
 }

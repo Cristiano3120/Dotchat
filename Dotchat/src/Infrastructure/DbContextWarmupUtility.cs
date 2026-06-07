@@ -7,7 +7,11 @@ using Serilog;
 
 namespace DotchatServer.src.Infrastructure;
 
-public sealed class DbContextWarmupUtility(IServiceProvider serviceProvider) : IWarmable
+/// <summary>
+/// This utility is designed to "warm up" the database context by executing simple queries. This can help reduce the latency of the first real database operations after the application starts, as it allows the Entity Framework to initialize and cache necessary metadata and connections.
+/// </summary>
+/// <param name="serviceProvider"></param>
+internal sealed class DbContextWarmupUtility(IServiceProvider serviceProvider) : IWarmable
 {
     public async Task WarmupAsync()
     {

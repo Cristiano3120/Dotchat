@@ -7,7 +7,7 @@ public sealed record RefreshTokenInfo
 {
     public Guid Id { get; private set; }
     public long UserId { get; init; }
-    public byte[] TokenHash { get; init; }
+    public byte[] TokenHash { get; init; } = Array.Empty<byte>();
     public DateTimeOffset ExpiresAt { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -20,6 +20,8 @@ public sealed record RefreshTokenInfo
         ExpiresAt = expiresAt;
     }
 
-    // Parameterless constructor for EF Core
+    /// <summary>
+    /// Parameterless constructor for EF Core
+    /// </summary>
     private RefreshTokenInfo() { }
 }

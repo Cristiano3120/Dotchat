@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.Interfaces;
-using DotchatServer.src.Application.Services;
 using DotchatServer.src.Constants;
 using DotchatShared.src.Constants;
 using DotchatShared.src.DTOs.AuthRequests;
@@ -9,13 +8,14 @@ using DotchatShared.src.Enums;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Serilog;
 
 namespace DotchatServer.src.API.Controllers;
 
 [ApiController]
 [Route($"{Endpoints.Base}/{Endpoints.AuthEndpoints.BaseAuth}")]
 [EnableRateLimiting(policyName: RateLimitPolicies.Auth)]
-public sealed class AuthController(AuthService authService) : ControllerBase
+public sealed class AuthController(IAuthService authService) : ControllerBase
 {
     [HttpPost(Endpoints.AuthEndpoints.Login)]
     public async Task<IActionResult> LoginAsync([FromBody] LoginRequest loginRequest)
@@ -58,9 +58,7 @@ public sealed class AuthController(AuthService authService) : ControllerBase
     [HttpGet(Endpoints.AuthEndpoints.ResendConfirmation + "/{userId}", Name = Endpoints.AuthEndpoints.ResendConfirmation)]
     public async Task<IActionResult> ResendConfirmationAsync([FromRoute] long userId)
     {
-        string resendUrl = CreateAuthUrl(Endpoints.AuthEndpoints.ResendConfirmation, new { userId });
-
-        IHtmlRenderable template = await authService.ResendVerificationEmailAsync(userId, resendUrl, lang: GetClientLanguage());
+        IHtmlRenderable template = await authService.ResendVerificationEmailAsync(userId, lang: GetClientLanguage());
         return Content(template.HtmlBody, ContentType.Html);
     }
 
@@ -69,15 +67,13 @@ public sealed class AuthController(AuthService authService) : ControllerBase
     /// </summary>
     /// <param name="token">The verification token to confirm the email.</param>
     /// <returns>Either a HTML view representing the result of the confirmation or a BadRequest if the token is invalid.</returns>
-    [HttpGet(Endpoints.AuthEndpoints.ConfirmEmail + "/{token}")]
+    [HttpGet(Endpoints.AuthEndpoints.ConfirmEmail + "/{token}", Name = Endpoints.AuthEndpoints.ConfirmEmail)]
     public async Task<IActionResult> ConfirmEmailAsync([FromRoute] string token)
     {
         string lang = GetClientLanguage();
         if (VerificationToken.TryParse(token, out VerificationToken verificationToken))
         {
-            string resendUrl = CreateAuthUrl(Endpoints.AuthEndpoints.ResendConfirmation, new { userId = verificationToken.UserId });
-            
-            IHtmlRenderable template = await authService.ConfirmEmailAsync(verificationToken, resendUrl, lang);
+            IHtmlRenderable template = await authService.ConfirmEmailAsync(verificationToken, lang);
             return Content(template.HtmlBody, ContentType.Html);
         }
 
@@ -85,18 +81,4 @@ public sealed class AuthController(AuthService authService) : ControllerBase
     }
 
     private string GetClientLanguage() => HttpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture.Culture.TwoLetterISOLanguageName ?? "en";
-
-    /// <summary>
-    /// Creates a fully qualified URL for the specified route name and values, using the current request's scheme. 
-    /// </summary>
-    /// <remarks>
-    /// <paramref name="values"/> has to be an anonymous object containing the route parameters required by the specified <paramref name="routeName"/>.
-    /// For example, if the route requires a parameter named "userId", you would pass new { userId = 123 } as the values argument.
-    /// </remarks>
-    /// <param name="routeName">The name of the route for which to generate a URL.</param>
-    /// <param name="values">An anonymous object containing the route parameters required by the specified route.</param>
-    /// <returns>A fully qualified URL for the specified route.</returns>
-    /// <exception cref="InvalidOperationException"></exception>
-    private string CreateAuthUrl(string routeName, object? values = null)
-        => Url.Action(routeName, nameof(AuthController), values, Request.Scheme) ?? throw new InvalidOperationException("Failed to create URL");
 }

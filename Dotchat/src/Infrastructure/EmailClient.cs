@@ -1,5 +1,5 @@
-﻿using DotchatServer.src.Application.DTOs.EmailModels;
-using DotchatServer.src.Application.DTOs.Emails;
+﻿using DotchatServer.src.Application.DTOs.Emails;
+using DotchatServer.src.Core.Config;
 using DotchatServer.src.Core.Interfaces;
 using DotNetEnv;
 using MailKit.Net.Smtp;
@@ -9,12 +9,15 @@ using Serilog;
 
 namespace DotchatServer.src.Infrastructure;
 
-public sealed class EmailClient : IEmailClient
+/// <summary>
+/// A simple email client that uses MailKit to send emails. It supports HTML emails and can be configured to use different SMTP servers. The email client is designed to be used in a dependency injection setup, allowing for easy testing and configuration.
+/// </summary>
+internal sealed class EmailClient : IEmailClient
 {
-    private readonly EmailOptions _options;
+    private readonly EmailConfig _options;
     private readonly string _appPassword;
 
-    public EmailClient(EmailOptions options)
+    public EmailClient(EmailConfig options)
     {
         _options = options;
         _appPassword = Env.GetString("GMAIL_APP_PASSWORD");

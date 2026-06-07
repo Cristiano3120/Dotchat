@@ -1,23 +1,20 @@
 ﻿using DotchatServer.src.Application.DTOs;
-using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Application.DTOs.Emails;
+using DotchatServer.src.Application.Enums;
 using DotchatServer.src.Application.Extensions;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Application.Services;
-using DotchatServer.src.Constants;
+using DotchatServer.src.Core.Config;
 using DotchatServer.src.Core.Interfaces;
 using DotchatServer.src.Infrastructure.Persistence;
 using DotchatServer.src.Infrastructure.Persistence.Repos;
-
 using Microsoft.EntityFrameworkCore;
-
 using RazorEngineCore;
-
 using StackExchange.Redis;
 
 namespace DotchatServer.src.Infrastructure;
 
-public static class InfrastructureServiceExtensions
+internal static class InfrastructureServiceExtensions
 {
     public static void AddInfrastructureServices(this IServiceCollection services,
         IWebHostEnvironment env,
@@ -46,15 +43,15 @@ public static class InfrastructureServiceExtensions
                 new Func<string?, string, Email>((subject, body) => new Email(subject ?? string.Empty, body)
             )));
 
-        _ = services.AddKeyedSingleton<ITemplateFactory<HtmlTemplate>>(TemplateFactoryKeys.Confirmation, (services, _)
+        _ = services.AddKeyedSingleton<ITemplateFactory<HtmlTemplate>>(TemplateFactoryKey.Confirmation, (services, _)
             => CreateHtmlTemplateFactory(services, AppPath.From(env).Src().Go("EmailConfirmationTemplates")));
 
-        _ = services.AddKeyedSingleton<ITemplateFactory<HtmlTemplate>>(TemplateFactoryKeys.ResendConfirmation, (services, _)
+        _ = services.AddKeyedSingleton<ITemplateFactory<HtmlTemplate>>(TemplateFactoryKey.ResendConfirmation, (services, _)
             => CreateHtmlTemplateFactory(services, AppPath.From(env).Src().Go("EmailConfirmationResendTemplates")));
 
         _ = services.AddSingleton<IEmailClient, EmailClient>(services => new EmailClient(configuration.GetValue<bool>("SendEmailToFakeSMPT")
-            ? configuration.GetSection("EmailSettingsDev").Get<EmailOptions>()!
-            : configuration.GetSection("EmailSettingsProd").Get<EmailOptions>()!));
+            ? configuration.GetSection("EmailSettingsDev").Get<EmailConfig>()!
+            : configuration.GetSection("EmailSettingsProd").Get<EmailConfig>()!));
         _ = services.AddSingleton<AppPath>(provider => AppPath.From(provider.GetRequiredService<IWebHostEnvironment>()));
 
         _ = services.AddDbContextPoolWithWarmup<AppDbContext, DbContextWarmupUtility>(

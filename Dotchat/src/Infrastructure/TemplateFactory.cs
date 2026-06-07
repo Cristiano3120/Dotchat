@@ -8,7 +8,7 @@ using Serilog;
 namespace DotchatServer.src.Infrastructure;
 
 /// <summary>
-/// A factory for creating templates.
+/// A factory for creating cshtml templates.
 /// </summary>
 /// <typeparam name="TReturn"></typeparam>
 /// <param name="razorEngine"></param>
@@ -16,7 +16,7 @@ namespace DotchatServer.src.Infrastructure;
 /// <param name="appPath"></param>
 /// <param name="baseFolderPath"></param>
 /// <param name="factory">The factory function for creating the return type. The first parameter is the subject which is optional(only used for emails), and the second is the HTML body.</param>
-public class TemplateFactory<TReturn>: ITemplateFactory<TReturn> where TReturn : class, IHtmlRenderable<TReturn>
+internal class TemplateFactory<TReturn>: ITemplateFactory<TReturn> where TReturn : class, IHtmlRenderable<TReturn>
 {
     private readonly ConcurrentDictionary<string, object> _templateCaches = new();
     private readonly ConcurrentDictionary<string, DateTime> _lastCacheUpdates = new();

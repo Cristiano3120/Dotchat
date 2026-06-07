@@ -2,10 +2,10 @@
 
 namespace DotchatServer.src.Application.DTOs.Emails;
 
-/// <summary>
-/// Represents an email. Contains a subject and a HTML body
-/// </summary>
 public sealed record Email(string Subject, string HtmlBody) : IHtmlRenderable<Email>
 {
+    /// <summary>
+    /// Enables implicit conversion of an Email object to a string by returning its HtmlBody property.
+    /// </summary>
     public static implicit operator string(Email email) => email.HtmlBody;
 }

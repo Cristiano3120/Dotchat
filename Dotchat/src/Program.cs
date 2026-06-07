@@ -2,11 +2,11 @@ using System.Globalization;
 using System.Text;
 
 using Destructurama;
-using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.DTOs.JwtModels;
 using DotchatServer.src.Application.Extensions;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Constants;
+using DotchatServer.src.Core.Config;
 using DotchatServer.src.Core.Entities;
 using DotchatServer.src.Core.Extensions;
 using DotchatServer.src.Infrastructure;
@@ -85,13 +85,30 @@ public static class Program
 
         _ = builder.Services.AddAuthorization();
 
-        _ = builder.Services.AddCoreServices();
-        builder.Services.AddInfrastructureServices(builder.Environment, envVals, configuration: builder.Configuration);
-        builder.Services.AddApplicationServices(builder.Environment, jwtSettings, workerID: builder.Configuration.GetValue<int>("WorkerID"));
         _ = builder.Services.AddOptions<AppSettings>().Bind(builder.Configuration.GetSection("AppSettings"));
         _ = builder.Services.AddOptions<ConfirmationEmailConfig>().Bind(builder.Configuration.GetSection("ConfirmationEmailConfig"));
 
+        AppSettings appSettings = builder.Configuration.GetSection("AppSettings").Get<AppSettings>()
+            ?? throw new InvalidOperationException("Failed to bind AppSettings from configuration.");
+
+        _ = builder.Services.AddCoreServices();
+        builder.Services.AddInfrastructureServices(builder.Environment, envVals, configuration: builder.Configuration);
+        builder.Services.AddApplicationServices(builder.Environment, appSettings, jwtSettings, workerID: builder.Configuration.GetValue<int>("WorkerID"));
+        _ = builder.Services.AddHttpContextAccessor();
+        
         WebApplication app = builder.Build();
+        //404 find out why?
+        _ = app.Use(async (context, next) =>
+        {
+            if (context is not null)
+            {
+                Log.Information("Request: {Method} {Path}", context.Request.Method, context.Request.Path);
+                Log.Information("RemoteIpAddress: {RemoteIpAddress}", context.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
+                Log.Information("UserAgent: {UserAgent}", context.Request.Headers.UserAgent.FirstOrDefault() ?? "Unknown");
+            }
+
+            await next(context);
+        });
 
         _ = app.UseForwardedHeaders(new ForwardedHeadersOptions
         {

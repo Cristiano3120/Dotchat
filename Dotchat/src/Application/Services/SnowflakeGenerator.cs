@@ -1,6 +1,6 @@
 ﻿namespace DotchatServer.src.Application.Services;
 
-public sealed class SnowflakeGenerator
+internal sealed class SnowflakeGenerator
 {
     private const int SequenceBits = 12;
     private const int WorkerBits = 10;

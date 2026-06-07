@@ -4,7 +4,7 @@ using StackExchange.Redis;
 
 namespace DotchatServer.src.Infrastructure.Persistence;
 
-public sealed class RedisCache(IConnectionMultiplexer redisConn) : IRedisCache
+internal sealed class RedisCache(IConnectionMultiplexer redisConn) : IRedisCache
 {
     private readonly IDatabase _database = redisConn.GetDatabase();
 

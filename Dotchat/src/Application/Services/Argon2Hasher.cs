@@ -2,13 +2,14 @@
 using System.Text;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Application.Interfaces.Security;
-
 using Isopoh.Cryptography.Argon2;
-
 using Serilog;
 
 namespace DotchatServer.src.Application.Services;
 
+/// <summary>
+/// Implements the Argon2 hashing algorithm for secure password hashing.
+/// </summary>
 internal sealed class Argon2Hasher : IHashingService, IWarmable
 {
     public byte[] Hash(string input)

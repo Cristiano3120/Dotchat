@@ -8,10 +8,20 @@ namespace DotchatServer.src.Application.DTOs.EmailModels;
 /// </summary>
 public sealed class VerificationEmailModel : ITemplateNecessities
 {
-    public required string Name { get; init; }
+    public required string DisplayName { get; init; }
     public required string AppName { get; init; }
+
+    /// <summary>
+    /// The URL that the user will click to confirm their email address. 
+    /// It is constructed using the web address from the app settings and the token provided as a parameter in the factory.
+    /// </summary>
     public required string ConfirmUrl { get; init; }
     public required string Language { get; init; }
+
+    /// <summary>
+    /// TimeSpan in which the confirmation link will expire. 
+    /// This is calculated based on the configuration for confirmation email expiration time, which is set in minutes.
+    /// </summary>
     public required TimeSpan Expiry { get; init; }
 
     /// <summary>

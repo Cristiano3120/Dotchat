@@ -1,5 +1,5 @@
 ﻿using DotchatServer.src.Core.Interfaces;
-namespace DotchatServer.src.Application.DTOs;
+namespace DotchatServer.src.Application.DTOs.TemplateModels;
 
 /// <summary>
 /// Represents the status of an email confirmation, including the application name, resend URL, and language.

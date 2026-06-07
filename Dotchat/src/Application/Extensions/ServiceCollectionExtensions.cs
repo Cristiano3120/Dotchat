@@ -7,7 +7,7 @@ namespace DotchatServer.src.Application.Extensions;
 /// <summary>
 /// Adds extension methods for registering services with warmup capabilities in the dependency injection container.
 /// </summary>
-public static class ServiceCollectionExtensions
+internal static class ServiceCollectionExtensions
 {
     /// <summary>
     /// Adds a keyed singleton mapping from TInterface to TImplementation and registers an IWarmable that resolves the
@@ -20,7 +20,7 @@ public static class ServiceCollectionExtensions
     /// <param name="services">The IServiceCollection to add the services to.</param>
     /// <param name="key">The key used to register and resolve the keyed service.</param>
     /// <returns>The original IServiceCollection for chaining.</returns>
-    public static IServiceCollection AddKeyedSingletonWithWarmup<TInterface, TImplementation>(this IServiceCollection services, object key)
+    internal static IServiceCollection AddKeyedSingletonWithWarmup<TInterface, TImplementation>(this IServiceCollection services, object key)
         where TInterface : class
         where TImplementation : class, TInterface
     {
@@ -40,7 +40,7 @@ public static class ServiceCollectionExtensions
     /// <typeparam name="TImplementation">The concrete implementation type to register as a singleton; must implement TInterface.</typeparam>
     /// <param name="services">The IServiceCollection to which the registrations will be added.</param>
     /// <returns>The original IServiceCollection for chaining.</returns>
-    public static IServiceCollection AddSingletonWithWarmup<TInterface, TImplementation>(this IServiceCollection services)
+    internal static IServiceCollection AddSingletonWithWarmup<TInterface, TImplementation>(this IServiceCollection services)
         where TInterface : class
         where TImplementation : class, TInterface
     {
@@ -59,7 +59,7 @@ public static class ServiceCollectionExtensions
     /// <typeparam name="TImplementation">The concrete implementation type to register as a singleton.</typeparam>
     /// <param name="services">The service collection to which the registrations are added.</param>
     /// <returns>The original IServiceCollection for call chaining.</returns>
-    public static IServiceCollection AddSingletonWithWarmup<TImplementation>(this IServiceCollection services)
+    internal static IServiceCollection AddSingletonWithWarmup<TImplementation>(this IServiceCollection services)
         where TImplementation : class
     {
         _ = services.AddSingleton<TImplementation>();
@@ -79,7 +79,7 @@ public static class ServiceCollectionExtensions
     /// <param name="optionsAction">An action to configure DbContextOptionsBuilder for TContext.</param>
     /// <param name="poolSize">The maximum size of the DbContext pool. Defaults to 1024.</param>
     /// <returns>The original IServiceCollection to allow call chaining.</returns>
-    public static IServiceCollection AddDbContextPoolWithWarmup<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] TContext, WarmupUtility>(this IServiceCollection services, Action<DbContextOptionsBuilder> optionsAction, int poolSize = 1024) where TContext : DbContext
+    internal static IServiceCollection AddDbContextPoolWithWarmup<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] TContext, WarmupUtility>(this IServiceCollection services, Action<DbContextOptionsBuilder> optionsAction, int poolSize = 1024) where TContext : DbContext
         where WarmupUtility : class, IWarmable
     {
         _ = services.AddDbContextPool<TContext>(optionsAction, poolSize);

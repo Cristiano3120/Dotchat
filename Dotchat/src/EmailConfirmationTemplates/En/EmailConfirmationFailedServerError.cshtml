@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <title>E-Mail Bestätigung</title>
+    <title>Email Confirmation Error</title>
     <style>
             @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:ital,wght@0,700;1,400&display=swap');
 
@@ -14,14 +14,14 @@
             }
 
             body {
-                background-color: #f5f4f0;
+                background-color: #f5f0f0;
                 font-family: 'DM Sans', sans-serif;
                 min-height: 100vh;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 padding: 40px 16px;
-                background-image: radial-gradient(circle at 20% 20%, #ede8d6 0%, transparent 50%), radial-gradient(circle at 80% 80%, #e8e0c8 0%, transparent 50%);
+                background-image: radial-gradient(circle at 20% 20%, #edd6d6 0%, transparent 50%), radial-gradient(circle at 80% 80%, #e6c8c8 0%, transparent 50%);
             }
 
             .card {
@@ -56,8 +56,8 @@
                 width: 72px;
                 height: 72px;
                 border-radius: 50%;
-                background-color: #fffbeb;
-                border: 2px solid #fcd34d;
+                background-color: #fef2f2;
+                border: 2px solid #fca5a5;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -144,27 +144,27 @@
 
             <div class="icon-wrap">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="12" r="11" stroke="#F59E0B" stroke-width="1.5" />
-                    <path d="M12 7v5.5l3 3" stroke="#F59E0B" stroke-width="2"
-                          stroke-linecap="round" stroke-linejoin="round" />
+                    <circle cx="12" cy="12" r="11" stroke="#EF4444" stroke-width="1.5" />
+                    <path d="M12 7v5" stroke="#EF4444" stroke-width="2" stroke-linecap="round" />
+                    <circle cx="12" cy="16.5" r="1" fill="#EF4444" />
                 </svg>
             </div>
 
-            <h2>Link ungültig</h2>
+            <h2>Something Went Wrong</h2>
 
             <p>
-                Deine E-Mail-Adresse kann nicht bestätigt werden,da der
-                Bestätigungslink bereits abgelaufen ist.
+                An error occurred while confirming your email address.
+                Please try again later.
             </p>
 
             <hr class="divider" />
 
             <p class="hint">
-                Du kannst die E-Mail-Bestätigung jederzeit in deinen
-                <strong>Kontoeinstellungen</strong> erneut anstoßen.
+                If this problem persists, please contact our
+                <strong>support team</strong> for assistance.
             </p>
 
-            <a href="@Model.ResendUrl" class="btn">Neuen Link anfordern</a>
+            <a href="@Model.ResendUrl" class="btn">Resend Confirmation Email</a>
 
         </div>
 

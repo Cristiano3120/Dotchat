@@ -16,19 +16,9 @@ public readonly record struct VerificationToken
 {
     public long UserId { get; init; }
 
-    /// <summary>
-    /// A random identifier,  that is combined with the UserId to create a unique token. 
-    /// This ensures that even if the same user requests multiple tokens, each token will be unique and can be invalidated independently.
-    /// Additionally, the random identifier adds an extra layer of security by making the token harder to guess or forge, as it is not solely based on the user ID.
-    /// </summary>
     public Guid RandomIdentifier { get; init; }
     public static VerificationToken Empty => new();
 
-    /// <summary>
-    /// Creates a new VerificationToken containing the UserID and <see cref="Guid.NewGuid"/> as the random identifier.
-    /// </summary>
-    /// <param name="userId"></param>
-    /// <returns></returns>
     public static VerificationToken New(long userId) => new()
     {
         UserId = userId,
@@ -90,7 +80,13 @@ public readonly record struct VerificationToken
         
         return WebEncoders.Base64UrlEncode(bytes);
     }
-    
+
+    /// <summary>
+    /// Allows implicit conversion of a VerificationToken to a string by calling the ToString() method, which returns the base64-encoded representation of the token.
+    /// </summary>
     public static implicit operator string(VerificationToken token) => token.ToString();
+    /// <summary>
+    /// Allows implicit conversion of a VerificationToken to a RedisKey which itself implicitly converts to a string by calling the ToString() method, which returns the base64-encoded representation of the token.
+    /// </summary>
     public static implicit operator RedisKey(VerificationToken token) => token.ToString();
 }

@@ -41,7 +41,7 @@ internal sealed class JwtService(JwtSettings jwtSettings) : IJwtService
             issuer: jwtSettings.Issuer,
             audience: jwtSettings.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(jwtSettings.expiry),
+            expires: DateTime.UtcNow.AddMinutes(jwtSettings.Expiry),
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
         );
 
@@ -49,7 +49,7 @@ internal sealed class JwtService(JwtSettings jwtSettings) : IJwtService
         (
             AccessToken: new JwtSecurityTokenHandler().WriteToken(token),
             RefreshToken: GenerateRefreshToken(),
-            expiry: TimeSpan.FromMinutes(jwtSettings.expiry)
+            Expiry: TimeSpan.FromMinutes(jwtSettings.Expiry)
         );
     }
 
@@ -63,5 +63,5 @@ internal sealed class JwtService(JwtSettings jwtSettings) : IJwtService
         }
     }
 
-    public TimeSpan GetDefaultexpiry() => TimeSpan.FromMinutes(jwtSettings.expiry);
+    public TimeSpan GetDefaultexpiry() => TimeSpan.FromMinutes(jwtSettings.Expiry);
 }

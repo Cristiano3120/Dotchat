@@ -2,6 +2,8 @@
 using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Application.DTOs.Emails;
+using DotchatServer.src.Application.DTOs.TemplateModels;
+using DotchatServer.src.Application.Enums;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Core.Templates;
 using DotchatShared.src.Enums;
@@ -9,11 +11,10 @@ using Serilog;
 
 namespace DotchatServer.src.Application.Services;
 
-public sealed class TemplatePrecompilationService
-    (ITemplateFactory<Email> emailFactory,
-    ITemplateFactory<ConfirmationEmailTemplate> confirmationEmailFactory,
-    ITemplateFactory<ResendConfirmationEmailTemplate> resendConfirmationEmailTemplateFactory,
-    ITemplateFactory<ConfirmationFailedEmailTemplate> confirmationFailedEmailTemplateFactory) : IWarmable
+internal sealed class TemplatePrecompilationService
+    (ITemplateFactory<Email> emailFactory, 
+    [FromKeyedServices(TemplateFactoryKey.Confirmation)] ITemplateFactory<HtmlTemplate> confirmationEmailFactory,
+    [FromKeyedServices(TemplateFactoryKey.ResendConfirmation)] ITemplateFactory<HtmlTemplate> resendConfirmationEmailTemplateFactory) : IWarmable
 {
     private IEnumerable<(string Name, Func<Language, ValueTask> Compile)> GetAllTemplates() =>
     [
@@ -23,11 +24,14 @@ public sealed class TemplatePrecompilationService
         (Templates.HtmlTemplates.EmailConfirmed,
             async lang => await confirmationEmailFactory.CompileAsync<EmailConfirmedModel>(Templates.HtmlTemplates.EmailConfirmed, lang.ToString())),
 
-        (Templates.HtmlTemplates.EmailConfirmationFailed,
-            async lang => await confirmationFailedEmailTemplateFactory.CompileAsync<EmailConfirmationFailedModel>(Templates.HtmlTemplates.EmailConfirmationFailed, lang.ToString())),
-
         (Templates.HtmlTemplates.ResendConfirmation,
             async lang => await resendConfirmationEmailTemplateFactory.CompileAsync<ResendConfirmationEmailModel>(Templates.HtmlTemplates.ResendConfirmation, lang.ToString())),
+
+        (Templates.HtmlTemplates.EmailConfirmationFailedServerError,
+            async lang => await confirmationEmailFactory.CompileAsync<EmailConfirmationFailedModel>(Templates.HtmlTemplates.EmailConfirmationFailedServerError, lang.ToString())),
+
+         (Templates.HtmlTemplates.EmailConfirmationFailed,
+            async lang => await confirmationEmailFactory.CompileAsync<EmailConfirmationFailedModel>(Templates.HtmlTemplates.EmailConfirmationFailed, lang.ToString()))
     ];
 
     public async Task WarmupAsync()

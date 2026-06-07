@@ -2,7 +2,10 @@
 
 namespace DotchatServer.src.Infrastructure;
 
-public sealed class AppPath : NavigableBase<AppPath>
+/// <summary>
+/// Represents a navigable path within the application, allowing for easy construction of file paths relative to the application's root directory.
+/// </summary>
+internal sealed class AppPath : NavigableBase<AppPath>
 {
     private AppPath(string root, string currentAppPath) : base(root, currentAppPath) { }
     private AppPath(string root) : base(root, root) { }

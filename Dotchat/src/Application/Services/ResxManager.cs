@@ -5,7 +5,7 @@ using DotchatServer.src.Core;
 
 namespace DotchatServer.src.Application.Services;
 
-public sealed class ResxManager : NavigableBase<ResxManager>
+internal sealed class ResxManager : NavigableBase<ResxManager>
 {
     private static readonly ConcurrentDictionary<string, ResourceManager> _cache = new();
 

@@ -1,6 +1,6 @@
 ﻿namespace DotchatServer.src.Core.Extensions;
 
-public static class CoreServiceExtensions
+internal static class CoreServiceExtensions
 {
     public static IServiceCollection AddCoreServices(this IServiceCollection services)
     {
