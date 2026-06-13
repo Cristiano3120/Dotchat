@@ -8,7 +8,6 @@ using DotchatShared.src.Enums;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Serilog;
 
 namespace DotchatServer.src.API.Controllers;
 

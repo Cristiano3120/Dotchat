@@ -5,6 +5,10 @@ using DotchatServer.src.Core;
 
 namespace DotchatServer.src.Application.Services;
 
+/// <summary>
+/// Manages .resx resource files for localization. Initialized via the static <see cref="From(string)"/> Method.
+/// It allows navigating through resource files using the FluentAPI pattern
+/// </summary>
 internal sealed class ResxManager : NavigableBase<ResxManager>
 {
     private static readonly ConcurrentDictionary<string, ResourceManager> _cache = new();

@@ -1,5 +1,8 @@
 ﻿namespace DotchatServer.src.Application.Services;
 
+/// <summary>
+/// Implements a Snowflake ID generator, which produces unique 64-bit identifiers based on the current timestamp, a worker ID, and a sequence number.
+/// </summary>
 internal sealed class SnowflakeGenerator
 {
     private const int SequenceBits = 12;
@@ -12,7 +15,7 @@ internal sealed class SnowflakeGenerator
     private long _lastTimestamp;
     private long _sequence = 0;
 
-    private static readonly long _cacxEpoch = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero).ToUnixTimeMilliseconds();
+    private static readonly long _dotchatEpoch = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero).ToUnixTimeMilliseconds();
     private readonly object _lock = new();
 
     public SnowflakeGenerator(long workerId)
@@ -36,7 +39,7 @@ internal sealed class SnowflakeGenerator
     /// <returns></returns>
     public static DateTimeOffset GetCreationTime(long id)
     {
-        long timestamp = (id >> 22) + _cacxEpoch;
+        long timestamp = (id >> 22) + _dotchatEpoch;
         return DateTimeOffset.FromUnixTimeMilliseconds(timestamp);
     }
 
@@ -73,7 +76,7 @@ internal sealed class SnowflakeGenerator
             _lastTimestamp = timestamp;
 
 
-            return ((timestamp - _cacxEpoch) << (WorkerBits + SequenceBits))
+            return ((timestamp - _dotchatEpoch) << (WorkerBits + SequenceBits))
                    | (_workerId << SequenceBits)
                    | _sequence;
         }

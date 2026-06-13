@@ -22,10 +22,35 @@ internal abstract class NavigableBase<T> where T : NavigableBase<T>
 
     protected abstract T Create(string root, string currentAppPath);
 
+    /// <summary>
+    /// Navigates to the "src" folder within the current application path.
+    /// </summary>
+    /// <returns></returns>
     public T Src() => Navigate("src");
+    
+    /// <summary>
+    /// Navigates to the "Infrastructure" folder within the current application path.
+    /// </summary>
+    /// <returns></returns>
     public T Infrastructure() => Navigate("Infrastructure");
+    
+    /// <summary>
+    /// Navigates to the "Application" folder within the current application path.
+    /// </summary>
+    /// <returns></returns>
     public T Application() => Navigate("Application");
+    
+    /// <summary>
+    /// Navigates to the "Core" folder within the current application path.
+    /// </summary>
+    /// <returns></returns>
     public T Core() => Navigate("Core");
+
+    /// <summary>
+    /// Navigates to a specified folder within the current application path.
+    /// </summary>
+    /// <param name="folder"></param>
+    /// <returns></returns>
     public T Go(string folder) => Navigate(folder);
 
     private T Navigate(string folder)
