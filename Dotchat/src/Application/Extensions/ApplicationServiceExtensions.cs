@@ -27,5 +27,6 @@ public static class ApplicationServiceExtensions
         _ = services.AddSingleton<ResxManager>((services) => ResxManager.From(env));
         _ = services.AddSingleton<IUrlBuilder, UrlBuilder>((services) => UrlBuilder.Create(appSettings.WebAddress));
         _ = services.AddScoped<IAuthService, AuthService>();
+        _ = services.AddSingleton<PipelineWarmupService>();
     }
 }

@@ -9,9 +9,9 @@ public sealed record ApplicationUser
     public long Id { get; init; }
 
     // ── PROFIL ────────────────────────────────────────────────────
-    public string Email { get; init; } = string.Empty;
-    public string Username { get; init; } = string.Empty;
-    public string DisplayName { get; init; } = string.Empty;
+    public required string Email { get; init; } = string.Empty;
+    public required string Username { get; init; } = string.Empty;
+    public required string DisplayName { get; init; } = string.Empty;
     public DateTimeOffset Birthday { get; init; }
     public string? Bio { get; init; }
 

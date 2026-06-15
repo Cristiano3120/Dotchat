@@ -1,8 +1,6 @@
 ﻿using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Infrastructure.Persistence;
-
 using Microsoft.EntityFrameworkCore;
-
 using Serilog;
 
 namespace DotchatServer.src.Infrastructure;
@@ -22,8 +20,8 @@ internal sealed class DbContextWarmupUtility(IServiceProvider serviceProvider) :
         {
             Log.Information("DB Warmup start");
 
-            _ = await dbContext.Users.AsNoTracking().AnyAsync(x => x.Username == "warmup");
-            _ = await dbContext.Users.AsNoTracking().AnyAsync(x => x.Email == "warmup@warmup.com");
+            _ = await dbContext.Users.Take(1).FirstOrDefaultAsync();
+            _ = await dbContext.RefreshTokens.Take(1).FirstOrDefaultAsync();
 
             Log.Information("DB Warmup successful");
         }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 
@@ -5,11 +6,13 @@ using Destructurama;
 using DotchatServer.src.Application.DTOs.JwtModels;
 using DotchatServer.src.Application.Extensions;
 using DotchatServer.src.Application.Interfaces;
+using DotchatServer.src.Application.Services;
 using DotchatServer.src.Constants;
 using DotchatServer.src.Core.Config;
 using DotchatServer.src.Core.Entities;
 using DotchatServer.src.Core.Extensions;
 using DotchatServer.src.Infrastructure;
+using DotchatShared.src.Constants;
 using DotNetEnv;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -84,6 +87,7 @@ public static class Program
         });
 
         _ = builder.Services.AddAuthorization();
+        _ = builder.Services.AddHealthChecks(builder.Configuration.GetConnectionString("Redis")!, builder.Configuration.GetConnectionString("PostgreSQL")!);
 
         _ = builder.Services.AddOptions<AppSettings>().Bind(builder.Configuration.GetSection("AppSettings"));
         _ = builder.Services.AddOptions<ConfirmationEmailConfig>().Bind(builder.Configuration.GetSection("ConfirmationEmailConfig"));
@@ -95,9 +99,15 @@ public static class Program
         builder.Services.AddInfrastructureServices(builder.Environment, envVals, configuration: builder.Configuration);
         builder.Services.AddApplicationServices(builder.Environment, appSettings, jwtSettings, workerID: builder.Configuration.GetValue<int>("WorkerID"));
         _ = builder.Services.AddHttpContextAccessor();
-        
+        _ = builder.Services.AddHttpClient(HttpClientNames.HealthCheckClient, (httpClient) =>
+        {
+            UrlBuilder urlBuilder = UrlBuilder.Create(appSettings.WebAddress);
+            httpClient.Timeout = TimeSpan.FromSeconds(10);
+            httpClient.BaseAddress = new Uri(urlBuilder.AddUrl(Endpoints.HealthEndpoints.BaseHealthEndpoint).Build() + "/");//Slash neeeded for correct URL building if the slash is missing the path will be api/live instead of api/health/live...
+        });
+        //TODO: Mach nen pipeline warmup. Injecte HTTP CLient Factory und rufe den Health Endpoint auf
         WebApplication app = builder.Build();
-        //404 find out why?
+
         _ = app.Use(async (context, next) =>
         {
             if (context is not null)
@@ -127,6 +137,7 @@ public static class Program
         _ = app.UseAuthentication();
         _ = app.UseAuthorization();
         _ = app.MapControllers();
+        _ = app.MapHealthEndpoints();
 
         //Warmup every service that implements IWarmable. Hashing Services are an example for this
         IEnumerable<IWarmable> warmables = app.Services.GetServices<IWarmable>();
@@ -138,6 +149,7 @@ public static class Program
             return;
         }
 
+        _ = app.Lifetime.ApplicationStarted.Register(() => app.Services.GetService<PipelineWarmupService>()?.WarmupAsync());
         await app.RunAsync(webAddress);
     }
 }

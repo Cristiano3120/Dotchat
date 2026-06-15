@@ -4,10 +4,10 @@ namespace DotchatServer.src.Application.Services;
 
 public sealed class UrlBuilder : IUrlBuilder
 {
-    private readonly string _root = string.Empty;
+    private readonly string _base = string.Empty;
     private readonly string _url = string.Empty;
 
-    public UrlBuilder AddUrl(string url) => new(_root, url);
+    public UrlBuilder AddUrl(string url) => new(_base, url);
 
     public UrlBuilder AddRouteParam(string value)
     {
@@ -17,7 +17,7 @@ public sealed class UrlBuilder : IUrlBuilder
         }
 
         // Ensure there's exactly one '/' between the existing URL and the new route parameter
-        return new(_root, url: $"{_url.TrimEnd('/')}/{Uri.EscapeDataString(value.TrimStart('/'))}");
+        return new(_base, url: $"{_url.TrimEnd('/')}/{Uri.EscapeDataString(value.TrimStart('/'))}");
     }
 
     public UrlBuilder AddQueryParam(string key, string value)
@@ -28,7 +28,7 @@ public sealed class UrlBuilder : IUrlBuilder
         }
 
         char separator = _url.Contains('?') ? '&' : '?';
-        return new(_root, url: $"{separator}{Uri.EscapeDataString(key)}={Uri.EscapeDataString(value)}");
+        return new(_base, url: $"{_url}{separator}{Uri.EscapeDataString(key)}={Uri.EscapeDataString(value)}");
     }
 
     public string Build()
@@ -38,14 +38,19 @@ public sealed class UrlBuilder : IUrlBuilder
             throw new InvalidOperationException("URL must be set before building.");
         }
 
-        return _root + '/' + _url;
+        if (string.IsNullOrEmpty(_base))
+        {
+            return _url;
+        }
+
+        return $"{_base.TrimEnd('/')}/{_url.TrimStart('/')}";
     }
 
-    public static UrlBuilder Create(string root) => new(root, string.Empty);
+    public static UrlBuilder Create(string @base) => new(@base, string.Empty);
 
-    private UrlBuilder(string root, string url)
+    private UrlBuilder(string @base, string url)
     {
-        _root = root;
+        _base = @base;
         _url = url;
     }
 }

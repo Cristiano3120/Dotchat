@@ -20,4 +20,14 @@ public static class Endpoints
         public static string ConfirmEmailEndpoint => $"{BaseAuthEndpoint}/{ConfirmEmail}";
         public static string ResendConfirmationEndpoint => $"{BaseAuthEndpoint}/{ResendConfirmation}";
     }
+
+    public static class HealthEndpoints
+    {
+        public const string BaseHealth = "health";
+        public const string Liveness = "live";
+        public const string Readiness = "ready";
+        public static string BaseHealthEndpoint => $"{Base}/{BaseHealth}";
+        public static string LivenessEndpoint => $"{BaseHealthEndpoint}/{Liveness}";
+        public static string ReadinessEndpoint => $"{BaseHealthEndpoint}/{Readiness}";
+    }
 }

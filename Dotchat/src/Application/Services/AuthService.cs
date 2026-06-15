@@ -1,4 +1,5 @@
-﻿using DotchatServer.src.Application.DTOs;
+﻿using System.Diagnostics;
+using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Application.DTOs.Emails;
 using DotchatServer.src.Application.DTOs.JwtModels;
@@ -46,6 +47,7 @@ internal sealed class AuthService(
     {
         //Dont hash password yet, we will do it in the repository.
         //Doing it here would be expensive if the email or username is already taken
+        Stopwatch stopwatch = Stopwatch.StartNew();
         ApplicationUser applicationUser = new()
         {
             Id = snowflakeGenerator.NextId(),
@@ -56,19 +58,28 @@ internal sealed class AuthService(
         };
 
         Log.Debug("Attempting to register user: {applicationUser}", applicationUser);
-
+        CallTime(stopwatch); //9ms -> 0.9ms
         JwtClientData jwtData = jwtService.GenerateToken(userId: applicationUser.Id, email: applicationUser.Email);
         RefreshTokenInfo refreshTokenInfo = new(applicationUser.Id, hashingService.Hash(jwtData.RefreshToken), DateTimeOffset.UtcNow.Add(jwtData.Expiry));
-
+        CallTime(stopwatch); //160ms -> 120ms -> 130ms
         RegisterErrorType registrationResult = await authRepository.CompleteRegistrationAsync(applicationUser, refreshTokenInfo, registerRequest.Password);
         if (registrationResult != RegisterErrorType.None)
         {
             return new RegisterError(registrationResult);
         }
-
+        CallTime(stopwatch);//360ms-> 130ms -> 130ms
         //We dont care if the email was sent successfully or not at this point, the user is registered either way and can request a new verification email if needed
         TrySendVerificationEmailAsync(applicationUser, language).FireAndForget();
+        CallTime(stopwatch);//40ms -> 0.1ms -> 0.1ms
         return new RegisterResponse(jwtData);
+    }
+
+    private void CallTime(Stopwatch stopwatch)
+    {
+        stopwatch.Stop();
+        Log.Debug(stopwatch.Elapsed.TotalMilliseconds + "ms");
+        stopwatch.Restart();
+
     }
 
     /// <summary>

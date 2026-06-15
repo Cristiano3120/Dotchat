@@ -2,7 +2,7 @@
 
 public sealed class LinkBuilderTests
 {
-    private UrlBuilder _sut = UrlBuilder.Create("");
+    private UrlBuilder _sut = UrlBuilder.Create(string.Empty);
 
     [Fact]
     public void Build_WithOnlyBaseUrl_ReturnsBaseUrl()

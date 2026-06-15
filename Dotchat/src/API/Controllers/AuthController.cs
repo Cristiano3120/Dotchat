@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Constants;
@@ -8,6 +9,7 @@ using DotchatShared.src.Enums;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Serilog;
 
 namespace DotchatServer.src.API.Controllers;
 
@@ -36,6 +38,7 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     {
         string lang = GetClientLanguage();
         RegisterResult registerResult = await authService.RegisterAsync(registerRequest, lang);
+
         return registerResult.Match(
             Ok, // Success case: return 200 OK with the result
             error => error.Type switch
