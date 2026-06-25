@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using DotchatShared.src.Enums;
 
 namespace DotchatShared.src.DTOs.AuthRequests;
 
@@ -9,6 +10,9 @@ namespace DotchatShared.src.DTOs.AuthRequests;
 /// <param name="Email">The email address associated with the user account. Must be a valid email format.</param>
 /// <param name="Password">The password for the user account. Must be at least 8 characters in length.</param>
 public sealed record LoginRequest(
-    [EmailAddress] string Email,
-    [MinLength(8)] string Password
+    [Required][EmailAddress][MaxLength(254)] string Email,
+    [Required][MinLength(8)][MaxLength(72)] string Password,
+    [Required][EnumDataType(typeof(Platform))] Platform? Platform,
+    [Required] Guid? DeviceId,
+    [MaxLength(100)] string? DeviceName
 );

@@ -1,165 +1,62 @@
 ﻿using DotchatServer.src.Application.DTOs;
-using DotchatServer.src.Application.Enums;
 using DotchatServer.src.Application.Interfaces;
-using DotchatServer.src.Application.Interfaces.Security;
 using DotchatServer.src.Core.Entities;
-
-using DotchatShared.src.Enums;
-
+using DotchatShared.src.DTOs;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
-using Npgsql;
-
-using Serilog;
 
 namespace DotchatServer.src.Infrastructure.Persistence.Repos;
 
-internal sealed class AuthRepository(
-    [FromKeyedServices(HashingAlgorithm.Argon2)] IHashingService hashingService,
-    AppDbContext dbContext) : IAuthRepository
+internal sealed class AuthRepository(AppDbContext dbContext) : IAuthRepository
 {
     private readonly DbSet<ApplicationUser> _users = dbContext.Users;
+    private readonly DbSet<RefreshTokenInfo> _refreshTokens = dbContext.RefreshTokens;
 
-    public async Task<Result<bool>> ConfirmEmailAsync(long userId)
+    public async Task<ApplicationUser?> FindUserByEmailAsync(string email)
+    => await _users.FirstOrDefaultAsync(x => x.Email == email);
+
+    public async Task UpsertRefreshTokenAsync(RefreshTokenInfo refreshTokenInfo)
     {
-        try
+        int updatedRows = await _refreshTokens
+            .Where(x => x.UserId == refreshTokenInfo.UserId && x.DeviceId == refreshTokenInfo.DeviceId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.TokenHash, refreshTokenInfo.TokenHash)
+                .SetProperty(x => x.ExpiresAt, refreshTokenInfo.ExpiresAt)
+                .SetProperty(x => x.LastUsedAt, DateTime.UtcNow)
+                .SetProperty(x => x.RevokedAt, (DateTime?)null));
+
+        if (updatedRows == 0)
         {
-            int affectedRows = await _users.Where(x => x.Id == userId).ExecuteUpdateAsync(s => s.SetProperty(e => e.EmailConfirmed, true));
-            if (affectedRows > 0)
-            {
-                Log.Information("Email confirmed successfully for user {UserId}", userId);
-                return Result<bool>.Success(true);
-            }
-
-            Log.Error("Failed to confirm email for user {UserId}. No rows were affected, which either means the user does not exist or the email is already confirmed.", userId);
-            return Result<bool>.Success(false);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "An error occurred while confirming email for user {UserId}", userId);
-            return Result<bool>.Failure(ex);
-        }
-    }
-
-    public async Task<ApplicationUser?> GetUserByIdAsync(long userId)
-    {
-        try
-        {//TODO: Consider returning a more specific error type or using a Result<T> pattern to distinguish between "user not found" and actual errors.
-            return await _users.FirstOrDefaultAsync(x => x.Id == userId);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "An error occurred while retrieving user by ID {UserId}", userId);
-            return null;
-        }
-    }
-
-    private async Task<RegisterErrorType> CreateUserAsync(ApplicationUser applicationUser, string password)
-    {
-        bool usernameTaken = await _users.AnyAsync(x => x.Username == applicationUser.Username);
-        if (usernameTaken)
-        {
-            return RegisterErrorType.UsernameTaken;
-        }
-
-        bool emailTaken = await _users.AnyAsync(x => x.Email == applicationUser.Email);
-        if (emailTaken)
-        {
-            return RegisterErrorType.EmailTaken;
-        }
-
-        applicationUser = applicationUser with
-        {
-            PasswordHash = hashingService.Hash(password)
-        };
-
-        _ = _users.Add(applicationUser);
-        return RegisterErrorType.None;
-    }
-
-    private void StoreRefreshToken(RefreshTokenInfo refreshTokenInfo)
-        => _ = dbContext.RefreshTokens.Add(refreshTokenInfo);
-
-    public async Task<RegisterErrorType> CompleteRegistrationAsync(ApplicationUser applicationUser, RefreshTokenInfo refreshTokenInfo, string userPassword)
-    {
-        await using IDbContextTransaction tx = await dbContext.Database.BeginTransactionAsync();
-        try
-        {
-            RegisterErrorType result = await CreateUserAsync(applicationUser, userPassword);
-            if (result != RegisterErrorType.None)
-            {
-                await tx.RollbackAsync();
-                return result;
-            }
-
-            StoreRefreshToken(refreshTokenInfo);
-
+            _ = await _refreshTokens.AddAsync(refreshTokenInfo);
             _ = await dbContext.SaveChangesAsync();
-            await tx.CommitAsync();
-
-            return result;
-        }
-        catch (DbUpdateException dbUpdateEx)
-        {
-            if (dbUpdateEx.InnerException is PostgresException pgEx
-                && pgEx.SqlState == PostgresErrorCodes.UniqueViolation)
-            {
-                string? fieldName = GetFieldNameFromConstraint(pgEx.ConstraintName);
-                Log.Error(dbUpdateEx, "Unique constraint violation occurred while creating user. Constraint: {ConstraintName}, Parsed Field: {FieldName}", pgEx.ConstraintName, fieldName);
-
-                return fieldName switch
-                {
-                    nameof(ApplicationUser.Username) => RegisterErrorType.UsernameTaken,
-                    nameof(ApplicationUser.Email) => RegisterErrorType.EmailTaken,
-                    _ => RegisterErrorType.Unknown,
-                };
-            }
-
-            Log.Error(dbUpdateEx, "An unexpected error occurred while creating user.");
-            return RegisterErrorType.Unknown;
-        }
-        catch (NpgsqlException ex)
-        {
-            await tx.RollbackAsync();
-            Log.Error(ex, "DB error during registration for {Username}", applicationUser.Username);
-            return RegisterErrorType.DbUnavailable;
-        }
-        catch (Exception ex)
-        {
-            await tx.RollbackAsync();
-            Log.Error(ex, "Unexpected error during registration for {Username}", applicationUser.Username);
-            return RegisterErrorType.Unknown;
         }
     }
 
+    public async Task<bool> CheckIfEmailExistsAsync(string email)
+        => await _users.AnyAsync(x => x.Email == email);
 
-    /// <summary>
-    /// Extracts a PascalCase field name from a PostgreSQL constraint name.
-    /// Expects constraints following the convention: prefix_table_fieldname
-    /// e.g. "ix_users_email" → "Email", "ix_users_username" → "Username"
-    /// </summary>
-    /// <param name="constraint">
-    /// The constraint name from <see cref="PostgresException.ConstraintName"/>.
-    /// </param>
-    /// <returns>
-    /// PascalCase field name if the constraint name is valid and parseable;
-    /// otherwise <see langword="null"/>.
-    /// </returns>
-    private static string? GetFieldNameFromConstraint(string? constraint)
+    public async Task<bool> CheckIfUsernameExistsAsync(string username)
+        => await _users.AnyAsync(x => x.Username == username);
+
+    public async Task<bool> ConfirmEmailAsync(Snowflake userId)
     {
-        if (string.IsNullOrWhiteSpace(constraint))
+        int affectedRows = await _users.Where(x => x.Id == userId).ExecuteUpdateAsync(s => s.SetProperty(e => e.EmailConfirmed, true));
+        if (affectedRows > 0)
         {
-            return null;
+            Log.Information("Email confirmed successfully for user {UserId}", userId);
+            return true;
         }
 
-        string[] parts = constraint.Split('_', StringSplitOptions.RemoveEmptyEntries);
-        string fieldName = parts[^1];
+        Log.Error("Failed to confirm email for user {UserId}. No rows were affected, which either means the user does not exist or the email is already confirmed.", userId);
+        return false;
+    }
 
-        if (parts.Length < 2)
-        {
-            return null;
-        }
+    public async Task<ApplicationUser?> GetUserByIdAsync(Snowflake userId) 
+        => await _users.FirstOrDefaultAsync(x => x.Id == userId);
 
-        return char.ToUpper(fieldName[0]) + fieldName[1..];
+    public async Task RegisterUserAsync(ApplicationUser user, RefreshTokenInfo tokenInfo)
+    {
+        _ = await _users.AddAsync(user);
+        _ = await _refreshTokens.AddAsync(tokenInfo);
+        _ = await dbContext.SaveChangesAsync();
     }
 }

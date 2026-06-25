@@ -4,14 +4,14 @@ using System.Security.Cryptography;
 using System.Text;
 using DotchatServer.src.Application.DTOs.JwtModels;
 using DotchatServer.src.Application.Interfaces;
-
+using DotchatShared.src.DTOs;
 using Microsoft.IdentityModel.Tokens;
 
 namespace DotchatServer.src.Application.Services;
 
 internal sealed class JwtService(JwtSettings jwtSettings) : IJwtService
 {
-    public JwtClientData GenerateToken(long userId, string email)
+    public JwtClientData GenerateToken(Snowflake userId, string email)
     {
         SymmetricSecurityKey key = new(key: Encoding.UTF8.GetBytes(jwtSettings.Key));
 
@@ -38,6 +38,8 @@ internal sealed class JwtService(JwtSettings jwtSettings) : IJwtService
         );
     }
 
+    public TimeSpan GetDefaultexpiry() => TimeSpan.FromMinutes(jwtSettings.Expiry);
+
     private static string GenerateRefreshToken()
     {
         byte[] randomNumber = new byte[64];
@@ -47,6 +49,4 @@ internal sealed class JwtService(JwtSettings jwtSettings) : IJwtService
             return Convert.ToBase64String(randomNumber);
         }
     }
-
-    public TimeSpan GetDefaultexpiry() => TimeSpan.FromMinutes(jwtSettings.Expiry);
 }

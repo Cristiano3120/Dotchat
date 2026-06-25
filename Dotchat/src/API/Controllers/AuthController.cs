@@ -1,15 +1,15 @@
-﻿using System.Diagnostics;
-using System.Net;
+﻿using System.Net;
 using DotchatServer.src.Application.DTOs;
+using DotchatServer.src.Application.Enums;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Constants;
 using DotchatShared.src.Constants;
+using DotchatShared.src.DTOs;
 using DotchatShared.src.DTOs.AuthRequests;
 using DotchatShared.src.Enums;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Serilog;
 
 namespace DotchatServer.src.API.Controllers;
 
@@ -21,7 +21,17 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     [HttpPost(Endpoints.AuthEndpoints.Login)]
     public async Task<IActionResult> LoginAsync([FromBody] LoginRequest loginRequest)
     {
-        return Ok();
+        //Needs to return: Jwt rest can be pulled via endpoints like /me
+        LoginResult result = await authService.LoginAsync(loginRequest);
+        return result.Match<IActionResult>(
+            Ok, // Success case: return 200 OK with the result
+            error => error.LoginErrorType switch
+            {
+                LoginErrorType.WrongCredentials => Unauthorized(""), //Return template client just checks the code browser takes template
+                LoginErrorType.DbException => Unauthorized(""),
+                _ => Unauthorized("")
+            }
+        );
     }
 
     /// <summary>
@@ -58,7 +68,7 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     /// <param name="userID">The user identifier whose verification email will be resent.</param>
     /// <returns>An Ok containing the rendered HTML confirmation template.</returns>
     [HttpGet(Endpoints.AuthEndpoints.ResendConfirmation + "/{userId}", Name = Endpoints.AuthEndpoints.ResendConfirmation)]
-    public async Task<IActionResult> ResendConfirmationAsync([FromRoute] long userId)
+    public async Task<IActionResult> ResendConfirmationAsync([FromRoute] Snowflake userId)
     {
         IHtmlRenderable template = await authService.ResendVerificationEmailAsync(userId, lang: GetClientLanguage());
         return Content(template.HtmlBody, ContentType.Html);

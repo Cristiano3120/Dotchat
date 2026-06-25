@@ -6,12 +6,13 @@ namespace DotchatServer.src.Infrastructure;
 /// A simple struct to represent the result of an operation, which can either be a success with a value of type T, or a failure with an exception.
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public record Result<T>
+public readonly record struct Result<TValueType, TErrorType>
 {
-    public T? Value { get; }
+    [MemberNotNullWhen(false, nameof(IsOperationSuccess))]
+    public TErrorType? Error { get; }
 
     [MemberNotNullWhen(true, nameof(IsOperationSuccess))]
-    public Exception? Error { get; }
+    public TValueType? Value { get; }
 
     /// <summary>
     /// Indicates whether the result represents a successful operation (true) or a failure (false). 
@@ -20,9 +21,19 @@ public record Result<T>
     /// </summary>
     public bool IsOperationSuccess { get; }
 
-    private Result(T value) { Value = value; IsOperationSuccess = true; }
-    private Result(Exception error) { Error = error; IsOperationSuccess = false; }
+    private Result(TValueType? value) { Value = value; IsOperationSuccess = true; }
+    private Result(TErrorType error) { Error = error; IsOperationSuccess = false; }
 
-    public static Result<T> Success(T value) => new(value);
-    public static Result<T> Failure(Exception error) => new(error);
+    /// <summary>
+    /// Makes it possible to return just "true" for example instead of Result<bool, Exception>.Success(true);
+    /// </summary>
+    public static implicit operator Result<TValueType, TErrorType>(TValueType value) => Success(value);
+
+    /// <summary>
+    /// Makes it possible to return just "ex" for example instead of Result<bool, Exception>.Failure(ex);
+    /// </summary>
+    public static implicit operator Result<TValueType, TErrorType>(TErrorType value) => Failure(value);
+
+    public static Result<TValueType, TErrorType> Success(TValueType? value) => new(value);
+    public static Result<TValueType, TErrorType> Failure(TErrorType error) => new(error);
 }

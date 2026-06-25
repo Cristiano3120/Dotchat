@@ -1,4 +1,5 @@
 ﻿using DotchatServer.src.Application.DTOs.JwtModels;
+using DotchatShared.src.DTOs;
 
 namespace DotchatServer.src.Application.Interfaces;
 
@@ -19,5 +20,5 @@ internal interface IJwtService
     /// <param name="userId">The unique identifier of the user for whom the token is generated.</param>
     /// <param name="email">The email address to include in the token's claims.</param>
     /// <returns>An object containing the generated JWT, Refresh Token and expiry. The token includes the user ID and email as claims.</returns>
-    public JwtClientData GenerateToken(long userId, string email);
+    public JwtClientData GenerateToken(Snowflake userId, string email);
 }

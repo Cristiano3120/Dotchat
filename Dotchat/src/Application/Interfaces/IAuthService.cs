@@ -1,5 +1,6 @@
-﻿using DotchatServer.src.Application.DTOs;
-using DotchatShared.src.DTOs.AuthRequests;
+﻿using DotchatServer.src.Application.Commands;
+using DotchatServer.src.Application.DTOs;
+using DotchatShared.src.DTOs;
 
 namespace DotchatServer.src.Application.Interfaces;
 
@@ -9,13 +10,20 @@ namespace DotchatServer.src.Application.Interfaces;
 public interface IAuthService
 {
     /// <summary>
+    /// Tries to login. If the login is successful a JWT Token is returned
+    /// </summary>
+    /// <param name="loginRequest"></param>
+    /// <returns></returns>
+    public Task<LoginResult> LoginAsync(LoginCommand loginRequest);
+
+    /// <summary>
     /// Registers a new user. If the registration is successful, a verification email is sent to the user and a JWT token is returned
     /// If the registration fails, a <see cref="RegisterErrorType"/> is returned with the appropriate error type
     /// </summary>
     /// <returns>
     /// The methods returns a <see cref="RegisterResult"/> which is a union that can either be a <see cref="RegisterResponse"/> or a <see cref="RegisterError"/>.
     /// </returns>
-    public Task<RegisterResult> RegisterAsync(RegisterRequest registerRequest, string language);
+    public Task<RegisterResult> RegisterAsync(RegisterCommand registerRequest, string language);
 
     /// <summary>
     /// Resends a verification email to the user with the given userID. 
@@ -25,7 +33,7 @@ public interface IAuthService
     /// <param name="resendUrl">The URL to include in the verification email for resending confirmation.</param>
     /// <param name="lang">The language or culture code used to localize the returned status template.</param>
     /// <returns>An IHtmlRenderable containing the localized email confirmation status view.</returns>
-    public Task<IHtmlRenderable> ResendVerificationEmailAsync(long userID, string lang);
+    public Task<IHtmlRenderable> ResendVerificationEmailAsync(Snowflake userID, string lang);
 
     /// <summary>
     /// Confirms a user's email using the provided verification token and returns a localized HTML status view.

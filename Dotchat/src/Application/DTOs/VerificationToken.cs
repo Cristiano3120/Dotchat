@@ -1,5 +1,6 @@
 ﻿using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
+using DotchatShared.src.DTOs;
 using Microsoft.AspNetCore.WebUtilities;
 using StackExchange.Redis;
 
@@ -10,16 +11,16 @@ namespace DotchatServer.src.Application.DTOs;
 /// and from a base64 string.
 /// </summary>
 /// <remarks>The token is encoded as UTF-8 bytes of the Guid string followed immediately by the user ID string,
-/// then base64-encoded. Create a new token with <see cref="VerificationToken.New(long)"/> which generates a fresh Guid;
-/// Use <see cref="VerificationToken.TryParse(string, out DotchatServer.src.Application.DTOs.VerificationToken)"/> to parse the string representation back to the struct.</remarks>
+/// then base64-encoded. Create a new token with <see cref="VerificationToken.New(Snowflake)"/> which generates a fresh Guid;
+/// Use <see cref="VerificationToken.TryParse(string, out VerificationToken)"/> to parse the string representation back to the struct.</remarks>
 public readonly record struct VerificationToken
 {
-    public long UserId { get; init; }
+    public Snowflake UserId { get; init; }
 
     public Guid RandomIdentifier { get; init; }
     public static VerificationToken Empty => new();
 
-    public static VerificationToken New(long userId) => new()
+    public static VerificationToken New(Snowflake userId) => new()
     {
         UserId = userId,
         RandomIdentifier = Guid.NewGuid()
@@ -41,8 +42,8 @@ public readonly record struct VerificationToken
         {
             int GuidSize = Unsafe.SizeOf<Guid>();
             Span<byte> data = WebEncoders.Base64UrlDecode(token);
-            
-            if (data.Length != GuidSize + sizeof(long))
+
+            if (data.Length != GuidSize + Unsafe.SizeOf<Snowflake>())
             {
                 verificationToken = Empty;
                 return false;
@@ -63,7 +64,6 @@ public readonly record struct VerificationToken
         }
     }
 
-
     /// <summary>
     /// Formats the token as a base64 string containing the random identifier and the user ID.
     /// </summary>
@@ -72,7 +72,7 @@ public readonly record struct VerificationToken
     {
         int GuidSize = Unsafe.SizeOf<Guid>();
 
-        Span<byte> bytes = stackalloc byte[GuidSize + sizeof(long)];
+        Span<byte> bytes = stackalloc byte[GuidSize + Unsafe.SizeOf<Snowflake>()];
         _ = RandomIdentifier.TryWriteBytes(bytes); //Write the GUID into the span
 
         //Writes the user ID as little-endian bytes immediately following the GUID bytes.

@@ -1,9 +1,11 @@
-﻿namespace DotchatServer.src.Application.Services;
+﻿using DotchatShared.src.DTOs;
+
+namespace DotchatServer.src.Application.Services;
 
 /// <summary>
 /// Implements a Snowflake ID generator, which produces unique 64-bit identifiers based on the current timestamp, a worker ID, and a sequence number.
 /// </summary>
-internal sealed class SnowflakeGenerator
+public sealed class SnowflakeGenerator
 {
     private const int SequenceBits = 12;
     private const int WorkerBits = 10;
@@ -37,9 +39,9 @@ internal sealed class SnowflakeGenerator
     /// </remarks>
     /// <param name="id">The id that you want the <see cref="DateTimeOffset"/> extracted from</param>
     /// <returns></returns>
-    public static DateTimeOffset GetCreationTime(long id)
+    internal static DateTimeOffset GetCreationTime(Snowflake id)
     {
-        long timestamp = (id >> 22) + _dotchatEpoch;
+        long timestamp = (id.Value >> 22) + _dotchatEpoch;
         return DateTimeOffset.FromUnixTimeMilliseconds(timestamp);
     }
 
@@ -51,7 +53,7 @@ internal sealed class SnowflakeGenerator
     /// coordination.</remarks>
     /// <returns>A unique 64-bit integer representing the next identifier in the sequence.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the system clock moves backwards, resulting in a timestamp earlier than the last generated identifier.</exception>
-    public long NextId()
+    public Snowflake NextId()
     {
         lock (_lock)
         {

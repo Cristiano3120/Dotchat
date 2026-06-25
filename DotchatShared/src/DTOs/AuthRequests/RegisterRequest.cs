@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using DotchatShared.src.Enums;
 
 namespace DotchatShared.src.DTOs.AuthRequests;
 
@@ -14,9 +15,12 @@ namespace DotchatShared.src.DTOs.AuthRequests;
 /// <param name="DisplayName">The display name to associate with the user account.</param>
 /// <param name="Birthday">The user's date of birth.</param>
 public sealed record RegisterRequest(
-    [EmailAddress] string Email,
-    [MinLength(8)] string Password,
-    [MinLength(3)] string Username,
-    string DisplayName,
-    DateTimeOffset Birthday
+    [Required][EmailAddress][MaxLength(254)] string Email,
+    [Required][MinLength(8)][MaxLength(72)] string Password,
+    [Required][MinLength(3)][MaxLength(32)][RegularExpression(@"^[a-zA-Z0-9_.-]+$")] string Username,
+    [Required][EnumDataType(typeof(Platform))] Platform? Platform,
+    [Required] DateTimeOffset? Birthday,
+    [Required] Guid? DeviceId,
+    [Required][MinLength(1)][MaxLength(64)] string DisplayName,
+    [MaxLength(100)] string? DeviceName
 );
