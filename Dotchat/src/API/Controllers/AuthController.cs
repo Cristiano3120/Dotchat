@@ -27,9 +27,9 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
             Ok, // Success case: return 200 OK with the result
             error => error.LoginErrorType switch
             {
-                LoginErrorType.WrongCredentials => Unauthorized(""), //Return template client just checks the code browser takes template
-                LoginErrorType.DbException => Unauthorized(""),
-                _ => Unauthorized("")
+                LoginErrorType.WrongCredentials => Unauthorized("Wrong credentials"),
+                LoginErrorType.DbException => StatusCode((int)HttpStatusCode.ServiceUnavailable, "The database is currently down :( Try again later"),
+                _ => StatusCode((int)HttpStatusCode.InternalServerError, error)
             }
         );
     }

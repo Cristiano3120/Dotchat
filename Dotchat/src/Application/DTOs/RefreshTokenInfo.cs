@@ -67,7 +67,7 @@ public sealed class RefreshTokenInfo
     public bool IsExpired => ExpiresAt < DateTime.UtcNow;
     public bool IsValid => !IsRevoked && !IsExpired;
 
-    public RefreshTokenInfo(TimeSpan expiry, string? deviceName = null)
+    public RefreshTokenInfo(TimeSpan expiry, string? deviceName)
     {
         Id = Guid.NewGuid();
         DeviceName = deviceName;

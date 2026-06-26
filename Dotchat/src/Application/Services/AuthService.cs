@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using DotchatServer.src.Application.Commands;
 using DotchatServer.src.Application.DTOs;
@@ -16,16 +15,12 @@ using DotchatServer.src.Core.Entities;
 using DotchatServer.src.Core.Extensions;
 using DotchatServer.src.Core.Interfaces;
 using DotchatServer.src.Core.Templates;
-using DotchatServer.src.Infrastructure;
-using DotchatServer.src.Infrastructure.Persistence.Repos;
 using DotchatShared.src.Constants;
 using DotchatShared.src.DTOs;
-using DotchatShared.src.DTOs.AuthRequests;
 using DotchatShared.src.Enums;
+using Isopoh.Cryptography.Argon2;
 using Microsoft.Extensions.Options;
 using MimeKit;
-using Serilog;
-using StackExchange.Redis;
 
 namespace DotchatServer.src.Application.Services;
 
@@ -51,19 +46,18 @@ internal sealed class AuthService(
 {
     public async Task<LoginResult> LoginAsync(LoginCommand loginRequest)
     {
+        Log.Debug("Login request: {req}", loginRequest);
         try
-        {
+        { 
             ApplicationUser? user = await authRepository.FindUserByEmailAsync(loginRequest.Email);
-            byte[] passwordHash = hashingService.Hash(loginRequest.Password);
-
-            if (user is null || !CryptographicOperations.FixedTimeEquals(user.PasswordHash, passwordHash))
+            if (user is null || !hashingService.Verify(loginRequest.Password, user.PasswordHash))
             {
                 return new LoginError(LoginErrorType.WrongCredentials);
             }
 
             JwtClientData jwtClientData = jwtService.GenerateToken(user.Id, user.Email);
             byte[] tokenHash = hashingService.Hash(jwtClientData.AccessToken);
-            RefreshTokenInfo refreshTokenInfo = new(expiry: jwtClientData.Expiry)
+            RefreshTokenInfo refreshTokenInfo = new(expiry: jwtClientData.Expiry, loginRequest.DeviceName)
             {
                 UserId = user.Id,
                 DeviceId = loginRequest.DeviceId,
@@ -83,6 +77,7 @@ internal sealed class AuthService(
 
     public async Task<RegisterResult> RegisterAsync(RegisterCommand registerRequest, string language)
     {
+        Log.Debug("Register req: '{req}'", registerRequest);
         try
         {
             if (await authRepository.CheckIfEmailExistsAsync(registerRequest.Email))
@@ -103,7 +98,7 @@ internal sealed class AuthService(
                 PasswordHash = hashingService.Hash(registerRequest.Password),
                 DisplayName = registerRequest.DisplayName,
                 Birthday = registerRequest.Birthday,
-            };
+            }; 
             JwtClientData jwtClientData = jwtService.GenerateToken(user.Id, registerRequest.Email);
             RefreshTokenInfo tokenInfo = new(jwtClientData.Expiry, registerRequest.DeviceName)
             {
@@ -136,28 +131,29 @@ internal sealed class AuthService(
     /// <returns>An IHtmlRenderable containing the localized email confirmation status view.</returns>
     public async Task<IHtmlRenderable> ResendVerificationEmailAsync(Snowflake userID, string lang)
     {
-        Result<ApplicationUser?, Exception> result = await authRepository.GetUserByIdAsync(userID);
-
-        if (!result.IsOperationSuccess)
+        try
         {
+            ApplicationUser? user = await authRepository.GetUserByIdAsync(userID);
+            if (user is null)
+            {   //No need to return a template since a normal user can´t hit this path anyway
+                return new RawHtmlTemplate("User not found. The link you clicked or the request you made contained a faulty userID");
+            }
+
+            if (user.EmailConfirmed)
+            {
+                return await CreateEmailConfirmedTemplateAsync(lang);
+            }
+
+            //We dont care if the email was sent successfully or not at this point, the user is registered either way and can request a new verification email if needed
+            TrySendVerificationEmailAsync(user, lang).FireAndForget();
+
+            return await CreateResendConfirmationTemplateAsync(user, BuildResendUrl(userID), lang);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Error while trying to resend the verification email: {ex}", ex);
             return new RawHtmlTemplate("Internal Server Error :( Try again later");
         }
-
-        ApplicationUser? user = result.Value;
-        if (user is null)
-        {   //No need to return a template since a normal user can´t hit this path anyway
-            return new RawHtmlTemplate("User not found. The link you clicked or the request you made contained a faulty userID");
-        }
-
-        if (user.EmailConfirmed)
-        {
-            return await CreateEmailConfirmedTemplateAsync(lang);
-        }
-
-        //We dont care if the email was sent successfully or not at this point, the user is registered either way and can request a new verification email if needed
-        TrySendVerificationEmailAsync(user, lang).FireAndForget();
-
-        return await CreateResendConfirmationTemplateAsync(user, BuildResendUrl(userID), lang);
     }
 
     /// <summary>
@@ -166,7 +162,7 @@ internal sealed class AuthService(
     /// <remarks>Validates the token in Redis, logs failures, invokes the authentication repository to mark
     /// the email as confirmed, deletes the token from cache on success, and selects the appropriate HTML template for
     /// the result.</remarks>
-    /// <param name="token">Verification token containing the user identifier and token value used to confirm the email.</param>
+    /// <param name="token">Verificatio22007n token containing the user identifier and token value used to confirm the email.</param>
     /// <param name="language">Language or culture code used to localize the returned status template.</param>
     /// <returns>An IHtmlRenderable containing the localized email confirmation status view.</returns>
     public async Task<IHtmlRenderable> ConfirmEmailAsync(VerificationToken token, string language)

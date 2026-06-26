@@ -13,7 +13,8 @@ namespace DotchatServer.src.Application.Services;
 internal sealed class Argon2Hasher : IHashingService, IWarmable
 {
     public byte[] Hash(string input)
-        => Encoding.UTF8.GetBytes(Argon2.Hash
+    {
+        string hash = Argon2.Hash
         (
             password: input,
             timeCost: 2, //Number of iterations
@@ -21,7 +22,17 @@ internal sealed class Argon2Hasher : IHashingService, IWarmable
             parallelism: 1, //Number of threads and compute lanes to use
             type: Argon2Type.HybridAddressing,
             hashLength: 32 //Length of the resulting hash in bytes 
-        ));
+        );
+
+        return Encoding.UTF8.GetBytes(hash);
+    }
+
+    public bool Verify(string input, byte[] hash)
+    {
+        string phcString = Encoding.UTF8.GetString(hash);
+        bool result = Argon2.Verify(phcString, input);
+        return result;
+    }
 
     public Task WarmupAsync()
     {

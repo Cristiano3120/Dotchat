@@ -12,4 +12,11 @@ public interface IHashingService
     /// <param name="input">The input string to hash.</param>
     /// <returns>A byte array representing the hashed input.</returns>
     public byte[] Hash(string input);
+
+    /// <summary>
+    /// Verifies if the specific string and the hash are equal
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    public bool Verify(string input, byte[] hash);
 }
