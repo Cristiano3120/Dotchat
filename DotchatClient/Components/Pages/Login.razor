@@ -1,0 +1,368 @@
+﻿@page "/"
+@page "/login"
+@using DotchatClient.src.Application.Interfaces
+@using DotchatClient.src.Core.DTOs
+@using DotchatServer.src.Application.DTOs.JwtModels
+@using DotchatShared.src.Constants
+@using DotchatShared.src.DTOs
+@using DotchatShared.src.DTOs.AuthRequests
+@using DotchatShared.src.Interfaces
+
+<link rel="stylesheet" href="css/login.css" />
+
+<style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body, html {
+        height: 100%;
+        background: #1a1a1f;
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .wrap {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #1a1a1f;
+        padding: 2rem;
+    }
+
+    .card {
+        background: #222228;
+        border: 0.5px solid #333340;
+        border-radius: 16px;
+        padding: 40px;
+        width: 100%;
+        max-width: 380px;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 32px;
+    }
+
+    .logo-icon {
+        width: 28px;
+        height: 28px;
+        background: #7c6af7;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+    }
+
+    .logo-text {
+        color: #fff;
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: -0.3px;
+    }
+
+    h2 {
+        color: #f0f0f5;
+        font-size: 20px;
+        font-weight: 500;
+        margin-bottom: 6px;
+    }
+
+    .subtitle {
+        color: #6b6b80;
+        font-size: 14px;
+        margin-bottom: 28px;
+    }
+
+    .error-banner {
+        background: rgba(226, 75, 74, 0.1);
+        border: 0.5px solid rgba(226, 75, 74, 0.3);
+        color: #f08080;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 13px;
+        margin-bottom: 18px;
+    }
+
+    .field {
+        margin-bottom: 16px;
+    }
+
+    label {
+        display: block;
+        color: #9090a8;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+
+    .input-wrap {
+        position: relative;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #555568;
+        pointer-events: none;
+    }
+
+    input[type="email"], input[type="password"], input[type="text"] {
+        width: 100%;
+        background: #16161c;
+        border: 0.5px solid #333340;
+        border-radius: 8px;
+        padding: 11px 40px;
+        color: #f0f0f5;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.15s;
+    }
+
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear 
+        {
+            display: none;
+        }
+
+    input:focus {
+        border-color: #7c6af7;
+    }
+
+    input::placeholder {
+        color: #3a3a50;
+    }
+
+    .pw-toggle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #555568;
+        padding: 4px;
+        border-radius: 4px;
+        font-size: 16px;
+        line-height: 1;
+        transition: color 0.15s;
+    }
+
+        .pw-toggle:hover {
+            color: #9090a8;
+        }
+
+    .forgot {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 6px;
+    }
+
+        .forgot a {
+            color: #7c6af7;
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+    .btn-primary {
+        width: 100%;
+        background: #7c6af7;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        margin-top: 8px;
+        transition: background 0.15s, transform 0.1s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #6a59e0;
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: scale(0.99);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 20px 0;
+        color: #3a3a50;
+        font-size: 12px;
+    }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 0.5px;
+            background: #333340;
+        }
+
+    .btn-ghost {
+        width: 100%;
+        background: transparent;
+        color: #9090a8;
+        border: 0.5px solid #333340;
+        border-radius: 8px;
+        padding: 11px;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: border-color 0.15s, color 0.15s;
+    }
+
+        .btn-ghost:hover {
+            border-color: #555568;
+            color: #f0f0f5;
+        }
+
+    .register {
+        text-align: center;
+        margin-top: 20px;
+        color: #6b6b80;
+        font-size: 13px;
+    }
+
+        .register a {
+            color: #7c6af7;
+            text-decoration: none;
+            font-weight: 500;
+        }
+</style>
+
+<div class="wrap">
+    <div class="card">
+
+        <div class="logo">
+            <div class="logo-icon">💬</div>
+            <span class="logo-text">dotchat</span>
+        </div>
+
+        <h2>Willkommen zurück</h2>
+        <p class="subtitle">Melde dich an, um weiterzumachen.</p>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="error-banner">@errorMessage</div>
+        }
+
+        <div class="field">
+            <label>E-MAIL</label>
+            <div class="input-wrap">
+                <span class="input-icon">✉</span>
+                <input type="email" @bind="email" @bind:event="oninput" placeholder="du@example.com" />
+            </div>
+        </div>
+
+        <div class="field">
+            <label>PASSWORT</label>
+            <div class="input-wrap">
+                <span class="input-icon">🔒</span>
+                <input type="@(showPassword ? "text" : "password")"
+                       @bind="password"
+                       @bind:event="oninput"
+                       placeholder="********" />
+                <button class="pw-toggle" @onclick="() => showPassword = !showPassword">
+                    @(showPassword ? "🙈" : "👁")
+                </button>
+            </div>
+            <div class="forgot"><a href="#">Passwort vergessen?</a></div>
+        </div>
+
+        <button class="btn-primary" @onclick="HandleLogin" disabled="@isLoading">
+            @if (isLoading)
+            {
+                <span class="spinner"></span>
+            }
+            else
+            {
+                <span>Anmelden</span>
+            }
+        </button>
+
+        <div class="divider">oder</div>
+
+        <button class="btn-ghost">
+            <span>⌨</span> Mit GitHub fortfahren 
+        </button>
+
+        <p class="register">
+            Noch kein Konto? <a href="/register">Registrieren</a>
+        </p>
+
+    </div>
+</div>
+
+@inject IHttpApiClient HttpApiClient
+@inject IDeviceInfoService DeviceInfoService
+@inject IUrlBuilder UrlBuilder
+
+@code {
+    string email = "";
+    string password = "";
+    string errorMessage = "";
+    bool showPassword = false;
+    bool isLoading = false;
+    //SVG Bei GitHub-Button einfügen
+    async Task HandleLogin()
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            errorMessage = "Bitte E-Mail und Passwort eingeben."; //TODO: Localize
+            return;
+        }
+
+        isLoading = true;
+        StateHasChanged();
+        errorMessage = "";
+
+        LoginRequest loginRequest = new LoginRequest
+        (
+            Email: email,
+            Password: password,
+            DeviceId: DeviceInfoService.GetDeviceId(),
+            DeviceName: DeviceInfoService.GetDeviceName(),
+            Platform: DeviceInfoService.GetPlatform()
+        );
+        //Hol den UrlBuilder von DotchatServer
+        string loginUrl = UrlBuilder.AddUrl(Endpoints.AuthEndpoints.LoginEndpoint).Build();
+        Result<JwtClientData, ApiError> result = await HttpApiClient.PostAsync<LoginRequest, JwtClientData>(loginUrl, loginRequest);
+        if (result.IsOperationSuccess)
+        {
+            //Save Jwt
+            //Navigate to /home
+        }
+        else
+        {
+            errorMessage = $"Fehler beim Anmelden: {result.Error.ErrorCode}"; //TODO: Localize
+        }
+
+        isLoading = false;
+        StateHasChanged();
+    }
+}

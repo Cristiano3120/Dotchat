@@ -1,9 +1,8 @@
-using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 
 using Destructurama;
-using DotchatServer.src.Application.DTOs.JwtModels;
+using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.Extensions;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Application.Services;
@@ -22,7 +21,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RedisRateLimiting;
 
-using Serilog;
 using Serilog.Events;
 using StackExchange.Redis;
 

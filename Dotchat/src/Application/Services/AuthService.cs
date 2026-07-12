@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using DotchatServer.src.Application.Commands;
+﻿using DotchatServer.src.Application.Commands;
 using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Application.DTOs.Emails;
@@ -18,7 +16,7 @@ using DotchatServer.src.Core.Templates;
 using DotchatShared.src.Constants;
 using DotchatShared.src.DTOs;
 using DotchatShared.src.Enums;
-using Isopoh.Cryptography.Argon2;
+using DotchatShared.src.Interfaces;
 using Microsoft.Extensions.Options;
 using MimeKit;
 

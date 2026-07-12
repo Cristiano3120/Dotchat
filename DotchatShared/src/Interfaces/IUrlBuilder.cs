@@ -1,6 +1,6 @@
-﻿using DotchatServer.src.Application.Services;
+﻿using DotchatShared.src.Services;
 
-namespace DotchatServer.src.Application.Interfaces;
+namespace DotchatShared.src.Interfaces;
 
 /// <summary>
 /// Interface for building URLs in a flexible and fluent manner. The Singletion pattern is used as a starting point

@@ -12,7 +12,7 @@ namespace DotchatShared.src.DTOs.AuthRequests;
 public sealed record LoginRequest(
     [Required][EmailAddress][MaxLength(254)] string Email,
     [Required][MinLength(8)][MaxLength(72)] string Password,
-    [Required][EnumDataType(typeof(Platform))] Platform? Platform,
-    [Required] Guid? DeviceId,
-    [MaxLength(100)] string? DeviceName
+    [Required][EnumDataType(typeof(Platform))] Platform Platform,
+    [Required] Guid DeviceId,
+    [MaxLength(100)] string DeviceName
 );

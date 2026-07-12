@@ -1,6 +1,6 @@
-﻿using DotchatServer.src.Application.Interfaces;
+﻿using DotchatShared.src.Interfaces;
 
-namespace DotchatServer.src.Application.Services;
+namespace DotchatShared.src.Services;
 
 public sealed class UrlBuilder : IUrlBuilder
 {

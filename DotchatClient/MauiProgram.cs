@@ -1,4 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using DotchatClient.src.Application.Interfaces;
+using DotchatClient.src.Application.Services;
+using DotchatShared.src.Interfaces;
+using DotchatShared.src.Services;
+using Microsoft.Extensions.Logging;
 
 namespace DotchatClient;
 
@@ -6,7 +10,7 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
-        var builder = MauiApp.CreateBuilder();
+        MauiAppBuilder builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
             .ConfigureFonts(fonts =>
@@ -15,6 +19,10 @@ public static class MauiProgram
             });
 
         builder.Services.AddMauiBlazorWebView();
+        builder.Services.AddHttpClient();
+        builder.Services.AddSingleton<IUrlBuilder, UrlBuilder>();
+        builder.Services.AddSingleton<IDeviceInfoService, DeviceInfoService>();
+        builder.Services.AddSingleton<IHttpApiClient, HttpApiClient>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();

@@ -1,10 +1,12 @@
-﻿using DotchatServer.src.Application.DTOs.JwtModels;
+﻿using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.Enums;
 using DotchatServer.src.Application.Factories;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Application.Interfaces.Security;
 using DotchatServer.src.Application.Services;
 using DotchatServer.src.Core.Entities;
+using DotchatShared.src.Interfaces;
+using DotchatShared.src.Services;
 
 namespace DotchatServer.src.Application.Extensions;
 

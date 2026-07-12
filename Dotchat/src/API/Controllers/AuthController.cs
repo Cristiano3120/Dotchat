@@ -24,12 +24,28 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
         //Needs to return: Jwt rest can be pulled via endpoints like /me
         LoginResult result = await authService.LoginAsync(loginRequest);
         return result.Match<IActionResult>(
-            Ok, // Success case: return 200 OK with the result
+            Ok,
             error => error.LoginErrorType switch
             {
-                LoginErrorType.WrongCredentials => Unauthorized("Wrong credentials"),
-                LoginErrorType.DbException => StatusCode((int)HttpStatusCode.ServiceUnavailable, "The database is currently down :( Try again later"),
-                _ => StatusCode((int)HttpStatusCode.InternalServerError, error)
+                LoginErrorType.WrongCredentials => Problem(
+                    statusCode: (int)HttpStatusCode.Unauthorized,
+                    title: "Wrong credentials",
+                    type: ProblemDetailsTypes.Auth.WrongCredentials,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        { ProblemDetailsExtensions.ApiErrorCode, ApiErrorCode.WrongCredentials }
+                    }),
+
+                LoginErrorType.DbException => Problem(
+                    statusCode: (int)HttpStatusCode.ServiceUnavailable,
+                    title: "Database unavailable",
+                    type: ProblemDetailsTypes.Auth.DbUnavailable,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        { ProblemDetailsExtensions.ApiErrorCode, ApiErrorCode.DbUnavailable }
+                    }),
+
+                _ => Problem(statusCode: (int)HttpStatusCode.InternalServerError)
             }
         );
     }
@@ -53,9 +69,19 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
             Ok, // Success case: return 200 OK with the result
             error => error.Type switch
             {
-                RegisterErrorType.EmailTaken or RegisterErrorType.UsernameTaken => Conflict(error),
-                RegisterErrorType.DbUnavailable => StatusCode((int)HttpStatusCode.ServiceUnavailable, error),
-                _ => StatusCode((int)HttpStatusCode.InternalServerError, error)
+                RegisterErrorType.EmailTaken or RegisterErrorType.UsernameTaken => Problem(
+                    statusCode: (int)HttpStatusCode.Conflict,
+                    title: "Email or username already taken",
+                    type: ProblemDetailsTypes.Auth.EmailUsernameTaken),
+                RegisterErrorType.DbUnavailable => Problem(
+                    statusCode: (int)HttpStatusCode.ServiceUnavailable,
+                    title: "Service unavailable",
+                    type: ProblemDetailsTypes.Auth.DbUnavailable,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        { ProblemDetailsExtensions.ApiErrorCode, ApiErrorCode.DbUnavailable }
+                    }),
+                _ => Problem(statusCode: (int)HttpStatusCode.InternalServerError)
             }
         );
     }
@@ -89,7 +115,15 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
             return Content(template.HtmlBody, ContentType.Html);
         }
 
-        return BadRequest("Invalid token");
+        return Problem(
+            statusCode: (int)HttpStatusCode.BadRequest,
+            title: "Invalid token",
+            type: ProblemDetailsTypes.Auth.InvalidToken,
+            extensions: new Dictionary<string, object?>
+            {
+                { ProblemDetailsExtensions.ApiErrorCode, ApiErrorCode.WrongCredentials }
+            }
+        );
     }
 
     private string GetClientLanguage() => HttpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture.Culture.TwoLetterISOLanguageName ?? "en";

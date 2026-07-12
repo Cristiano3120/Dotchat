@@ -1,4 +1,4 @@
-﻿namespace DotchatServer.src.Application.DTOs.JwtModels;
+﻿namespace DotchatServer.src.Application.DTOs;
 
 /// <remarks>Keep the key secure to prevent unauthorized token creation.</remarks>
 /// <param name="Expiry">Token expiration in minutes.</param>
