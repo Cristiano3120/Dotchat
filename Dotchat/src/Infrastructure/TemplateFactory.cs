@@ -2,6 +2,7 @@
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Application.Services;
 using DotchatServer.src.Core.Interfaces;
+using DotchatShared.src.Services;
 using RazorEngineCore;
 using Serilog;
 

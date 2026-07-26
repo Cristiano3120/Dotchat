@@ -1,16 +1,13 @@
-﻿using DotchatServer.src.Core;
-
-namespace DotchatServer.src.Infrastructure;
+﻿namespace DotchatShared.src.Services;
 
 /// <summary>
 /// Represents a navigable path within the application, allowing for easy construction of file paths relative to the application's root directory.
 /// </summary>
-internal sealed class AppPath : NavigableBase<AppPath>
+public sealed class AppPath : NavigableBase<AppPath>
 {
     private AppPath(string root, string currentAppPath) : base(root, currentAppPath) { }
     private AppPath(string root) : base(root, root) { }
 
-    public static AppPath From(IWebHostEnvironment env) => new(env.ContentRootPath);
     public static AppPath From(string root) => new(root);
 
     protected override AppPath Create(string root, string currentAppPath) => new(_root, currentAppPath);

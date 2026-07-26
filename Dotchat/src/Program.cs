@@ -12,6 +12,7 @@ using DotchatServer.src.Core.Entities;
 using DotchatServer.src.Core.Extensions;
 using DotchatServer.src.Infrastructure;
 using DotchatShared.src.Constants;
+using DotchatShared.src.Services;
 using DotNetEnv;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;

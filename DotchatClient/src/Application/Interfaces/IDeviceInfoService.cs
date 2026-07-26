@@ -2,7 +2,7 @@
 
 namespace DotchatClient.src.Application.Interfaces;
 
-internal interface IDeviceInfoService
+public interface IDeviceInfoService
 {
     /// <summary>
     /// Retrieves the deviceID of the current device. If the deviceID is not available, it will generate a new one and store it in the local storage for future use.

@@ -8,6 +8,7 @@ using DotchatServer.src.Core.Config;
 using DotchatServer.src.Core.Interfaces;
 using DotchatServer.src.Infrastructure.Persistence;
 using DotchatServer.src.Infrastructure.Persistence.Repos;
+using DotchatShared.src.Services;
 using Microsoft.EntityFrameworkCore;
 using RazorEngineCore;
 using StackExchange.Redis;
@@ -39,20 +40,20 @@ internal static class InfrastructureServiceExtensions
             (
                 razorEngine: services.GetRequiredService<IRazorEngine>(),
                 resxManager: ResxManager.From(env),
-                AppPath.From(env).Src().Go("EmailTemplates"),
+                AppPath.From(env.ContentRootPath).Src().Go("EmailTemplates"),
                 new Func<string?, string, Email>((subject, body) => new Email(subject ?? string.Empty, body)
             )));
 
         _ = services.AddKeyedSingleton<ITemplateFactory<HtmlTemplate>>(TemplateFactoryKey.Confirmation, (services, _)
-            => CreateHtmlTemplateFactory(services, AppPath.From(env).Src().Go("EmailConfirmationTemplates")));
+            => CreateHtmlTemplateFactory(services, AppPath.From(env.ContentRootPath).Src().Go("EmailConfirmationTemplates")));
 
         _ = services.AddKeyedSingleton<ITemplateFactory<HtmlTemplate>>(TemplateFactoryKey.ResendConfirmation, (services, _)
-            => CreateHtmlTemplateFactory(services, AppPath.From(env).Src().Go("EmailConfirmationResendTemplates")));
+            => CreateHtmlTemplateFactory(services, AppPath.From(env.ContentRootPath).Src().Go("EmailConfirmationResendTemplates")));
 
         _ = services.AddSingleton<IEmailClient, EmailClient>(services => new EmailClient(configuration.GetValue<bool>("SendEmailToFakeSMPT")
             ? configuration.GetSection("EmailSettingsDev").Get<EmailConfig>()!
             : configuration.GetSection("EmailSettingsProd").Get<EmailConfig>()!));
-        _ = services.AddSingleton<AppPath>(provider => AppPath.From(provider.GetRequiredService<IWebHostEnvironment>()));
+        _ = services.AddSingleton<AppPath>(provider => AppPath.From(provider.GetRequiredService<IWebHostEnvironment>().ContentRootPath));
 
         _ = services.AddDbContextPoolWithWarmup<AppDbContext, DbContextWarmupUtility>(
             opt => opt.UseNpgsql(connectionString: configuration.GetConnectionString("PostgreSQL")));

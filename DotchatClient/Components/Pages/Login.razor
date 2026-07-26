@@ -1,12 +1,5 @@
 ﻿@page "/"
 @page "/login"
-@using DotchatClient.src.Application.Interfaces
-@using DotchatClient.src.Core.DTOs
-@using DotchatServer.src.Application.DTOs.JwtModels
-@using DotchatShared.src.Constants
-@using DotchatShared.src.DTOs
-@using DotchatShared.src.DTOs.AuthRequests
-@using DotchatShared.src.Interfaces
 
 <link rel="stylesheet" href="css/login.css" />
 
@@ -128,8 +121,7 @@
     }
 
         input[type="password"]::-ms-reveal,
-        input[type="password"]::-ms-clear 
-        {
+        input[type="password"]::-ms-clear {
             display: none;
         }
 
@@ -266,16 +258,16 @@
         <h2>Willkommen zurück</h2>
         <p class="subtitle">Melde dich an, um weiterzumachen.</p>
 
-        @if (!string.IsNullOrEmpty(errorMessage))
+        @if (!string.IsNullOrEmpty(ErrorMessage))
         {
-            <div class="error-banner">@errorMessage</div>
+            <div class="error-banner">@ErrorMessage</div>
         }
 
         <div class="field">
             <label>E-MAIL</label>
             <div class="input-wrap">
                 <span class="input-icon">✉</span>
-                <input type="email" @bind="email" @bind:event="oninput" placeholder="du@example.com" />
+                <input type="email" @bind="Email" @bind:event="oninput" placeholder="du@example.com" />
             </div>
         </div>
 
@@ -283,19 +275,19 @@
             <label>PASSWORT</label>
             <div class="input-wrap">
                 <span class="input-icon">🔒</span>
-                <input type="@(showPassword ? "text" : "password")"
-                       @bind="password"
+                <input type="@(ShowPassword ? "text" : "password")"
+                       @bind="Password"
                        @bind:event="oninput"
                        placeholder="********" />
-                <button class="pw-toggle" @onclick="() => showPassword = !showPassword">
-                    @(showPassword ? "🙈" : "👁")
+                <button class="pw-toggle" @onclick="() => ShowPassword = !ShowPassword">
+                    @(ShowPassword ? "🙈" : "👁")
                 </button>
             </div>
             <div class="forgot"><a href="#">Passwort vergessen?</a></div>
         </div>
 
-        <button class="btn-primary" @onclick="HandleLogin" disabled="@isLoading">
-            @if (isLoading)
+        <button class="btn-primary" @onclick="HandleLoginAsync" disabled="@IsLoading">
+            @if (IsLoading)
             {
                 <span class="spinner"></span>
             }
@@ -308,7 +300,10 @@
         <div class="divider">oder</div>
 
         <button class="btn-ghost">
-            <span>⌨</span> Mit GitHub fortfahren 
+            <span>
+                <img src="@GitHubSvg" alt="GitHub" height="25" width="25" />
+            </span>
+            Mit GitHub fortfahren
         </button>
 
         <p class="register">
@@ -317,52 +312,3 @@
 
     </div>
 </div>
-
-@inject IHttpApiClient HttpApiClient
-@inject IDeviceInfoService DeviceInfoService
-@inject IUrlBuilder UrlBuilder
-
-@code {
-    string email = "";
-    string password = "";
-    string errorMessage = "";
-    bool showPassword = false;
-    bool isLoading = false;
-    //SVG Bei GitHub-Button einfügen
-    async Task HandleLogin()
-    {
-        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-        {
-            errorMessage = "Bitte E-Mail und Passwort eingeben."; //TODO: Localize
-            return;
-        }
-
-        isLoading = true;
-        StateHasChanged();
-        errorMessage = "";
-
-        LoginRequest loginRequest = new LoginRequest
-        (
-            Email: email,
-            Password: password,
-            DeviceId: DeviceInfoService.GetDeviceId(),
-            DeviceName: DeviceInfoService.GetDeviceName(),
-            Platform: DeviceInfoService.GetPlatform()
-        );
-        //Hol den UrlBuilder von DotchatServer
-        string loginUrl = UrlBuilder.AddUrl(Endpoints.AuthEndpoints.LoginEndpoint).Build();
-        Result<JwtClientData, ApiError> result = await HttpApiClient.PostAsync<LoginRequest, JwtClientData>(loginUrl, loginRequest);
-        if (result.IsOperationSuccess)
-        {
-            //Save Jwt
-            //Navigate to /home
-        }
-        else
-        {
-            errorMessage = $"Fehler beim Anmelden: {result.Error.ErrorCode}"; //TODO: Localize
-        }
-
-        isLoading = false;
-        StateHasChanged();
-    }
-}

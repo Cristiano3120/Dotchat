@@ -12,5 +12,5 @@ public sealed record LoginCommand(
 )
 {
     public static implicit operator LoginCommand(LoginRequest loginRequest)
-        => new(loginRequest.Email, loginRequest.Password, loginRequest.Platform!.Value, loginRequest.DeviceId!.Value, loginRequest.DeviceName);
+        => new(loginRequest.Email, loginRequest.Password, loginRequest.Platform, loginRequest.DeviceId, loginRequest.DeviceName);
 };

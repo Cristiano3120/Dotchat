@@ -1,4 +1,5 @@
 ﻿using Microsoft.UI.Xaml;
+using System.Runtime.CompilerServices;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -18,6 +19,6 @@ public partial class App : MauiWinUIApplication
         this.InitializeComponent();
     }
 
-    protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+    protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiAppAsync().GetAwaiter().GetResult();
 }
 
