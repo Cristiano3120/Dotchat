@@ -2,20 +2,22 @@
 using DotchatClient.src.Application.Services;
 using DotchatClient.src.Core;
 using DotchatClient.src.Core.DTOs;
-using DotchatClient.src.Core.Enums;
 using DotchatServer.src.Application.DTOs.JwtModels;
 using DotchatShared.src.Constants;
 using DotchatShared.src.DTOs;
 using DotchatShared.src.DTOs.AuthRequests;
 using DotchatShared.src.Interfaces;
-using DotchatShared.src.Services;
 
 namespace DotchatClient.Components.Pages;
 
 public partial class Login(IHttpApiClient httpApiClient, IDeviceInfoService deviceInfoService, IUrlBuilder urlBuilder, Js js)
 {
     private readonly string GitHubSvg = ImagePaths.GitHubSvg;
-    private string Email { get; set; } = string.Empty;
+    private readonly string EyeSvg = ImagePaths.PasswordEyeSvg;
+    private readonly string ClosedEyeSvg = ImagePaths.ClosedPasswordEyeSvg;
+    private readonly string GoogleSvg = ImagePaths.GoogleSvg;
+    private readonly string DotchatSvg = ImagePaths.DotchatSvg; //TODO:Make Register.razor partial (put code into seperate file)
+    private string Email { get; set; } = string.Empty;          //TODO: Make Btn press anims
     private string Password { get; set; } = string.Empty;
     private string ErrorMessage { get; set; } = string.Empty;
     private bool ShowPassword { get; set; }

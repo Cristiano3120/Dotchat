@@ -1,5 +1,6 @@
-﻿@page "/"
-@page "/login"
+﻿@page "/register"
+
+@using DotchatClient.src.Core
 
 <link rel="stylesheet" href="css/login.css" />
 
@@ -92,14 +93,36 @@
         margin-bottom: 16px;
     }
 
+    .label-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 6px;
+    }
+
     label {
         display: block;
         color: #9090a8;
         font-size: 11px;
         font-weight: 600;
         letter-spacing: 0.5px;
-        margin-bottom: 6px;
     }
+
+    .char-count {
+        color: #3a3a50;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0;
+        font-variant-numeric: tabular-nums;
+    }
+
+        .char-count.near-limit {
+            color: #d9a441;
+        }
+
+        .char-count.at-limit {
+            color: #f08080;
+        }
 
     .input-wrap {
         position: relative;
@@ -114,7 +137,7 @@
         pointer-events: none;
     }
 
-    input[type="email"], input[type="password"], input[type="text"] {
+    input[type="email"], input[type="password"], input[type="text"], input[type="date"] {
         width: 100%;
         background: #16161c;
         border: 0.5px solid #333340;
@@ -126,16 +149,36 @@
         transition: border-color 0.15s;
     }
 
-        input[type="password"]::-ms-reveal,
-        input[type="password"]::-ms-clear {
-            display: none;
-        }
+    input[type="date"] {
+        padding: 11px 12px 11px 40px;
+        color-scheme: dark;
+    }
 
-    input:focus {
+    textarea {
+        width: 100%;
+        background: #16161c;
+        border: 0.5px solid #333340;
+        border-radius: 8px;
+        padding: 11px 12px;
+        color: #f0f0f5;
+        font-size: 14px;
+        outline: none;
+        resize: vertical;
+        min-height: 64px;
+        font-family: inherit;
+        transition: border-color 0.15s;
+    }
+
+    input[type="password"]::-ms-reveal,
+    input[type="password"]::-ms-clear {
+        display: none;
+    }
+
+    input:focus, textarea:focus {
         border-color: #7c6af7;
     }
 
-    input::placeholder {
+    input::placeholder, textarea::placeholder {
         color: #3a3a50;
     }
 
@@ -150,9 +193,8 @@
         color: #555568;
         padding: 4px;
         border-radius: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        font-size: 16px;
+        line-height: 1;
         transition: color 0.15s;
     }
 
@@ -160,29 +202,12 @@
             color: #9090a8;
         }
 
-        .pw-toggle img {
-            display: block;
-            width: 16px;
-            height: 16px;
-            opacity: 0.6;
-            transition: opacity 0.15s;
-        }
-
-        .pw-toggle:hover img {
-            opacity: 1;
-        }
-
-    .forgot {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 6px;
+    .optional-tag {
+        color: #3a3a50;
+        font-weight: 400;
+        text-transform: none;
+        letter-spacing: 0;
     }
-
-        .forgot a {
-            color: #7c6af7;
-            font-size: 12px;
-            text-decoration: none;
-        }
 
     .btn-primary {
         width: 100%;
@@ -252,14 +277,14 @@
             color: #f0f0f5;
         }
 
-    .register {
+    .login-link {
         text-align: center;
         margin-top: 20px;
         color: #6b6b80;
         font-size: 13px;
     }
 
-        .register a {
+        .login-link a {
             color: #7c6af7;
             text-decoration: none;
             font-weight: 500;
@@ -271,13 +296,13 @@
 
         <div class="logo">
             <div class="logo-icon">
-                <img src="@DotchatSvg" alt="Dotchat" width="22" height="22" class="logo-img" style="border-radius: 5px"/>
+                <img src="@DotchatSvg" alt="Dotchat" width="22" height="22" class="logo-img" style="border-radius: 5px" />
             </div>
             <span class="logo-text">Dotchat</span>
         </div>
 
-        <h2>Willkommen zurück</h2>
-        <p class="subtitle">Melde dich an, um weiterzumachen.</p>
+        <h2>Konto erstellen</h2>
+        <p class="subtitle">Registriere dich, um Dotchat zu nutzen.</p>
 
         @if (!string.IsNullOrEmpty(ErrorMessage))
         {
@@ -304,17 +329,55 @@
                     <img src="@(ShowPassword ? ClosedEyeSvg : EyeSvg)" alt="Passwort anzeigen" width="16" height="16" />
                 </button>
             </div>
-            <div class="forgot"><a href="#">Passwort vergessen?</a></div>
         </div>
 
-        <button class="btn-primary" @onclick="HandleLoginAsync" disabled="@IsLoading">
+        <div class="field">
+            <div class="label-row">
+                <label>USERNAME</label>
+                <span class="char-count @GetCountClass(Username.Length, MaxUsernameLength)">@Username.Length/@MaxUsernameLength</span>
+            </div>
+            <div class="input-wrap">
+                <span class="input-icon">@@</span>
+                <input type="text" @bind="Username" @bind:event="oninput" maxlength="@MaxUsernameLength" placeholder="username" />
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="label-row">
+                <label>ANZEIGENAME</label>
+                <span class="char-count @GetCountClass(DisplayName.Length, MaxDisplayNameLength)">@DisplayName.Length/@MaxDisplayNameLength</span>
+            </div>
+            <div class="input-wrap">
+                <span class="input-icon">👤</span>
+                <input type="text" @bind="DisplayName" @bind:event="oninput" maxlength="@MaxDisplayNameLength" placeholder="Cris" />
+            </div>
+        </div>
+
+        <div class="field">
+            <label>GEBURTSTAG</label>
+            <div class="input-wrap">
+                <span class="input-icon">🎂</span>
+                <input type="date" @bind="Birthday" @bind:event="oninput" />
+            </div>
+        </div>
+
+
+        <div class="field">
+            <div class="label-row">
+                <label>BIO <span class="optional-tag">(optional)</span></label>
+                <span class="char-count @GetCountClass(Bio.Length, MaxBioLength)">@Bio.Length/@MaxBioLength</span>
+            </div>
+            <textarea @bind="Bio" @bind:event="oninput" maxlength="@MaxBioLength" placeholder="Erzähl was über dich..."></textarea>
+        </div>
+
+        <button class="btn-primary" @onclick="HandleRegisterAsync" disabled="@IsLoading">
             @if (IsLoading)
             {
                 <span class="spinner"></span>
             }
             else
             {
-                <span>Anmelden</span>
+                <span>Registrieren</span>
             }
         </button>
 
@@ -329,13 +392,54 @@
 
         <button class="btn-ghost" style="margin: 10px 0px">
             <span>
-                <img src="@GoogleSvg" alt="Google" height="25" width="25" />
+                <img src="@GoogleSvg" alt="GitHub" height="25" width="25" />
             </span>
             Mit Google fortfahren
         </button>
 
-        <p class="register">
-            Noch kein Konto? <a href="/register">Registrieren</a>
+        <p class="login-link">
+            Schon ein Konto? <a href="/login">Anmelden</a>
         </p>
     </div>
 </div>
+
+@code {
+    private const int MaxUsernameLength = 20;
+    private const int MaxDisplayNameLength = 32;
+    private const int MaxBioLength = 190;
+
+    private string Email = "";
+    private string Username = "";
+    private string DisplayName = "";
+    private DateTime? Birthday;
+    private string Password = "";
+    private string Bio = "";
+
+    private bool ShowPassword = false;
+    private bool IsLoading = false;
+    private string? ErrorMessage;
+
+    private string? GitHubSvg = ImagePaths.GitHubSvg;
+    private readonly string EyeSvg = ImagePaths.PasswordEyeSvg;
+    private readonly string ClosedEyeSvg = ImagePaths.ClosedPasswordEyeSvg;
+    private readonly string GoogleSvg = ImagePaths.GoogleSvg;
+    private readonly string DotchatSvg = ImagePaths.DotchatSvg;
+
+    private static string GetCountClass(int current, int max)
+    {
+        if (current >= max) return "at-limit";
+        if (current >= max * 0.9) return "near-limit";
+        return "";
+    }
+
+    private async Task HandleRegisterAsync()
+    {
+        IsLoading = true;
+        StateHasChanged();
+
+        // TODO: Register-Request an Backend
+
+        IsLoading = false;
+        StateHasChanged();
+    }
+}

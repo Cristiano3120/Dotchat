@@ -11,23 +11,23 @@ namespace DotchatClient.src.Application.Services;
 
 internal sealed class HttpApiClient(HttpClient httpClient) : IHttpApiClient
 {
-    public async Task<Result<T, ApiError>> GetAsync<T>(string relativeUrl, CancellationToken cancellationToken = default)
-        => await SendAndReceiveAsync<T>(new HttpRequestMessage(HttpMethod.Get, relativeUrl), cancellationToken);
+    public async Task<Result<T, ApiError>> GetAsync<T>(string absoluteUrl, CancellationToken cancellationToken = default)
+        => await SendAndReceiveAsync<T>(new HttpRequestMessage(HttpMethod.Get, absoluteUrl), cancellationToken);
 
-    public async Task<Result<TReturn, ApiError>> PostAsync<TParam, TReturn>(string relativeUrl, TParam data, CancellationToken cancellationToken = default)
+    public async Task<Result<TReturn, ApiError>> PostAsync<TParam, TReturn>(string absoluteUrl, TParam data, CancellationToken cancellationToken = default)
         => await SendAndReceiveAsync<TReturn>(new HttpRequestMessage()
         {
             Content = JsonContent.Create(data),
             Method = HttpMethod.Post,
-            RequestUri = new Uri(relativeUrl, UriKind.Relative)
+            RequestUri = new Uri(absoluteUrl, UriKind.Absolute)
         }, cancellationToken); 
 
-    public async Task<Result<Unit, ApiError>> PostAsync<TParam>(string relativeUrl, TParam data, CancellationToken cancellationToken = default)
+    public async Task<Result<Unit, ApiError>> PostAsync<TParam>(string absoluteUrl, TParam data, CancellationToken cancellationToken = default)
         => await SendAsync(new HttpRequestMessage()
         {
             Content = JsonContent.Create(data),
             Method = HttpMethod.Post,
-            RequestUri = new Uri(relativeUrl, UriKind.Relative)
+            RequestUri = new Uri(absoluteUrl, UriKind.Absolute)
         }, cancellationToken);
 
     private async Task<Result<T, ApiError>> SendAndReceiveAsync<T>(HttpRequestMessage request, CancellationToken cts) 
