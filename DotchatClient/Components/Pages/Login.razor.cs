@@ -18,7 +18,7 @@ public partial class Login(IHttpApiClient httpApiClient, IDeviceInfoService devi
     private readonly string GoogleSvg = ImagePaths.GoogleSvg;
     private readonly string DotchatSvg = ImagePaths.DotchatSvg; //TODO:Make Register.razor partial (put code into seperate file)
     private string Email { get; set; } = string.Empty;          //TODO: Make Btn press anims
-    private string Password { get; set; } = string.Empty;
+    private string Password { get; set; } = string.Empty;       //TODO: Bio box muss selber expanden nicht großziehbar sein
     private string ErrorMessage { get; set; } = string.Empty;
     private bool ShowPassword { get; set; }
     private bool IsLoading { get; set; }

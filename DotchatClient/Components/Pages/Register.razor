@@ -1,6 +1,7 @@
 ﻿@page "/register"
 
 @using DotchatClient.src.Core
+@inject IJSRuntime JS
 
 <link rel="stylesheet" href="css/login.css" />
 
@@ -137,6 +138,12 @@
         pointer-events: none;
     }
 
+        .input-icon img {
+            display: block;
+            width: 16px;
+            height: 16px;
+        }
+
     input[type="email"], input[type="password"], input[type="text"], input[type="date"] {
         width: 100%;
         background: #16161c;
@@ -163,7 +170,10 @@
         color: #f0f0f5;
         font-size: 14px;
         outline: none;
-        resize: vertical;
+        resize: none;
+        field-sizing: content;
+        max-height: 200px;
+        overflow-y: auto;
         min-height: 64px;
         font-family: inherit;
         transition: border-color 0.15s;
@@ -196,10 +206,25 @@
         font-size: 16px;
         line-height: 1;
         transition: color 0.15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
         .pw-toggle:hover {
             color: #9090a8;
+        }
+
+        .pw-toggle img {
+            display: block;
+            width: 16px;
+            height: 16px;
+            opacity: 0.6;
+            transition: opacity 0.15s;
+        }
+
+        .pw-toggle:hover img {
+            opacity: 1;
         }
 
     .optional-tag {
@@ -239,6 +264,10 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+
+    .btn-ghost:active:not(:disabled) {
+        transform: scale(0.99);
+    }
 
     .divider {
         display: flex;
@@ -357,10 +386,14 @@
             <label>GEBURTSTAG</label>
             <div class="input-wrap">
                 <span class="input-icon">🎂</span>
-                <input type="date" @bind="Birthday" @bind:event="oninput" />
+                <input type="date"
+                       @ref="_birthdayInput"
+                       @bind="Birthday"
+                       @bind:event="oninput"
+                       min="1900-01-01"
+                       max="@_today" />
             </div>
         </div>
-
 
         <div class="field">
             <div class="label-row">
@@ -392,7 +425,7 @@
 
         <button class="btn-ghost" style="margin: 10px 0px">
             <span>
-                <img src="@GoogleSvg" alt="GitHub" height="25" width="25" />
+                <img src="@GoogleSvg" alt="Google" height="25" width="25" />
             </span>
             Mit Google fortfahren
         </button>
@@ -402,44 +435,3 @@
         </p>
     </div>
 </div>
-
-@code {
-    private const int MaxUsernameLength = 20;
-    private const int MaxDisplayNameLength = 32;
-    private const int MaxBioLength = 190;
-
-    private string Email = "";
-    private string Username = "";
-    private string DisplayName = "";
-    private DateTime? Birthday;
-    private string Password = "";
-    private string Bio = "";
-
-    private bool ShowPassword = false;
-    private bool IsLoading = false;
-    private string? ErrorMessage;
-
-    private string? GitHubSvg = ImagePaths.GitHubSvg;
-    private readonly string EyeSvg = ImagePaths.PasswordEyeSvg;
-    private readonly string ClosedEyeSvg = ImagePaths.ClosedPasswordEyeSvg;
-    private readonly string GoogleSvg = ImagePaths.GoogleSvg;
-    private readonly string DotchatSvg = ImagePaths.DotchatSvg;
-
-    private static string GetCountClass(int current, int max)
-    {
-        if (current >= max) return "at-limit";
-        if (current >= max * 0.9) return "near-limit";
-        return "";
-    }
-
-    private async Task HandleRegisterAsync()
-    {
-        IsLoading = true;
-        StateHasChanged();
-
-        // TODO: Register-Request an Backend
-
-        IsLoading = false;
-        StateHasChanged();
-    }
-}
