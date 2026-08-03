@@ -1,9 +1,7 @@
 ﻿using DotchatServer.src.Application.DTOs;
-using DotchatServer.src.Application.Enums;
 using DotchatServer.src.Core.Entities;
-using DotchatServer.src.Infrastructure;
 using DotchatShared.src.DTOs;
-using DotchatShared.src.Enums;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace DotchatServer.src.Application.Interfaces;
 
@@ -20,4 +18,6 @@ public interface IAuthRepository
     Task RegisterUserAsync(ApplicationUser user, RefreshTokenInfo tokenInfo);
     Task<bool> ConfirmEmailAsync(Snowflake userId);
     Task<ApplicationUser?> GetUserByIdAsync(Snowflake userID);
+    Task<RefreshTokenInfo?> GetRefreshTokenInfoAsync(byte[] refreshTokenHash);
+    Task UpdateRefreshTokenInfoAsync(Snowflake userId, Action<UpdateSettersBuilder<RefreshTokenInfo>> propertyUpdates);
 }

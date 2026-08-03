@@ -76,7 +76,7 @@
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
-        <PackageReference Include="Serilog" Version="4.3.1" />
+		<PackageReference Include="Serilog" Version="4.3.1" />
     </ItemGroup>
 
     <ItemGroup>
@@ -98,5 +98,9 @@
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </MauiIcon>
     </ItemGroup>
+
+	<ItemGroup Condition="$(TargetFramework.StartsWith('net10.0-android')) == true">
+		<PackageReference Include="Xamarin.AndroidX.Navigation.UI" Version="2.9.6" />
+	</ItemGroup>
 
 </Project>

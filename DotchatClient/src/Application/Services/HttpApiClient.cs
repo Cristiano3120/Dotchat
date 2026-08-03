@@ -1,15 +1,16 @@
-﻿using System.Net.Http.Json;
-using System.Text.Json;
-using DotchatClient.src.Application.Interfaces;
+﻿using DotchatClient.src.Application.Interfaces;
 using DotchatClient.src.Core.DTOs;
 using DotchatShared.src.Constants;
 using DotchatShared.src.DTOs;
 using DotchatShared.src.Enums;
 using Serilog;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace DotchatClient.src.Application.Services;
 
-internal sealed class HttpApiClient(HttpClient httpClient) : IHttpApiClient
+internal sealed class HttpApiClient(IJwtTokenStorage jwtTokenStorage, HttpClient httpClient) : IHttpApiClient
 {
     public async Task<Result<T, ApiError>> GetAsync<T>(string absoluteUrl, CancellationToken cancellationToken = default)
         => await SendAndReceiveAsync<T>(new HttpRequestMessage(HttpMethod.Get, absoluteUrl), cancellationToken);
@@ -41,6 +42,8 @@ internal sealed class HttpApiClient(HttpClient httpClient) : IHttpApiClient
         try
         {
             Log.Debug("[{Method}]: {RelativeUrl}", request.Method, request.RequestUri?.ToString());
+            await SetBearerTokenAsync(request);
+
             HttpResponseMessage response = await httpClient.SendAsync(request, cts);
             if (response.IsSuccessStatusCode)
             {
@@ -55,7 +58,7 @@ internal sealed class HttpApiClient(HttpClient httpClient) : IHttpApiClient
                     return Result<T, ApiError>.Success(data);
                 }
             }
-
+            
             ApiError apiError = await DeserializeApiErrorAsync(response, cts);
             Log.Debug("API Error on {Method} {RelativeUrl}: {@ApiError}", request.Method, request.RequestUri?.ToString(), apiError);
             return Result<T, ApiError>.Failure(apiError);
@@ -125,5 +128,21 @@ internal sealed class HttpApiClient(HttpClient httpClient) : IHttpApiClient
         };
 
         return error;
+    }
+
+    /// <summary>
+    /// Will request a new AccessToken if needed
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    private async Task SetBearerTokenAsync(HttpRequestMessage request)
+    {
+        (string? accessToken, bool requestNewToken) = jwtTokenStorage.GetAccessToken();
+        if (requestNewToken)
+        {
+            //req token
+        }
+
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
     }
 }

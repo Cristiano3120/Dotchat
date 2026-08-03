@@ -29,7 +29,8 @@ public static class MauiProgram
         {
             client.BaseAddress = new Uri(address);
         });
-        
+
+        _ = builder.Services.AddSingleton<IJwtTokenStorage, JwtTokenStorage>();
         _ = builder.Services.AddSingleton<IUrlBuilder, UrlBuilder>((services) => UrlBuilder.Create(address));
         _ = builder.Services.AddKeyedSingleton<AppPath>(WWWRootFolder.Base, (_, _) => AppPath.From("wwwroot"));
         _ = builder.Services.AddSingleton<IDeviceInfoService, DeviceInfoService>();

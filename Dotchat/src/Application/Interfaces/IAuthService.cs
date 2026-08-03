@@ -21,7 +21,7 @@ public interface IAuthService
     /// If the registration fails, a <see cref="RegisterErrorType"/> is returned with the appropriate error type
     /// </summary>
     /// <returns>
-    /// The methods returns a <see cref="RegisterResult"/> which is a union that can either be a <see cref="RegisterResponse"/> or a <see cref="RegisterError"/>.
+    /// The methods returns a <see cref="RegisterResult"/> which is a union that can either be a <see cref="RegisterResult"/> or a <see cref="RegisterError"/>.
     /// </returns>
     public Task<RegisterResult> RegisterAsync(RegisterCommand registerRequest, string language);
 
@@ -45,4 +45,10 @@ public interface IAuthService
     /// <param name="language">Language or culture code used to localize the returned status template.</param>
     /// <returns>An IHtmlRenderable containing the localized email confirmation status view.</returns>
     public Task<IHtmlRenderable> ConfirmEmailAsync(VerificationToken token, string language);
+
+    /// <summary>
+    /// Returns a new access token if it´s renewable. If not the user has to login again
+    /// </summary>
+    /// <param name="refreshToken"></param>
+    public Task<RefreshResult> RefreshAccessTokenAsync(string refreshToken);
 }

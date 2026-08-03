@@ -1,4 +1,4 @@
-﻿using DotchatServer.src.Application.DTOs.JwtModels;
+﻿using DotchatShared.src.DTOs;
 using DotchatShared.src.Enums;
 
 using OneOf;
@@ -12,11 +12,11 @@ namespace DotchatServer.src.Application.DTOs;
 /// <remarks>This type encapsulates both successful and error outcomes for registration, allowing methods to
 /// return a single result type. Use pattern matching or type checking to determine whether the result is a success or
 /// an error.</remarks>
-public partial class RegisterResult : OneOfBase<RegisterResponse, RegisterError>
+public partial class RegisterResult : OneOfBase<RegisterSuccess, RegisterError>
 {
-    private RegisterResult(OneOf<RegisterResponse, RegisterError> _) : base(_) { }
+    private RegisterResult(OneOf<RegisterSuccess, RegisterError> _) : base(_) { }
 
-    public static implicit operator RegisterResult(RegisterResponse _) => new(_);
+    public static implicit operator RegisterResult(RegisterSuccess _) => new(_);
     public static implicit operator RegisterResult(RegisterError _) => new(_);
 }
 
@@ -24,7 +24,7 @@ public partial class RegisterResult : OneOfBase<RegisterResponse, RegisterError>
 /// Represents a successful registration response containing JWT client data.
 /// </summary>
 /// <param name="JwtClientData">The JWT client data associated with the successful registration.</param>
-public sealed record RegisterResponse(JwtClientData JwtClientData);
+public sealed record RegisterSuccess(JwtClientData JwtClientData);
 
 /// <summary>
 /// Represents an error that occurred during the registration process, containing the type of error that occurred.

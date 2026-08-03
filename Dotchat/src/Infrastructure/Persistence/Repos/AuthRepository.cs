@@ -3,6 +3,7 @@ using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Core.Entities;
 using DotchatShared.src.DTOs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace DotchatServer.src.Infrastructure.Persistence.Repos;
 
@@ -50,7 +51,7 @@ internal sealed class AuthRepository(AppDbContext dbContext) : IAuthRepository
         return false;
     }
 
-    public async Task<ApplicationUser?> GetUserByIdAsync(Snowflake userId) 
+    public async Task<ApplicationUser?> GetUserByIdAsync(Snowflake userId)
         => await _users.FirstOrDefaultAsync(x => x.Id == userId);
 
     public async Task RegisterUserAsync(ApplicationUser user, RefreshTokenInfo tokenInfo)
@@ -59,4 +60,10 @@ internal sealed class AuthRepository(AppDbContext dbContext) : IAuthRepository
         _ = await _refreshTokens.AddAsync(tokenInfo);
         _ = await dbContext.SaveChangesAsync();
     }
+
+    public async Task<RefreshTokenInfo?> GetRefreshTokenInfoAsync(byte[] refreshTokenHash)
+        => await _refreshTokens.FirstOrDefaultAsync(x => x.TokenHash == refreshTokenHash);
+
+    public async Task UpdateRefreshTokenInfoAsync(Snowflake userId, Action<UpdateSettersBuilder<RefreshTokenInfo>> propertyUpdates)
+        => await _refreshTokens.Where(x => x.UserId == userId).ExecuteUpdateAsync(propertyUpdates);
 }

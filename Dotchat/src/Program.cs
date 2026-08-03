@@ -135,6 +135,7 @@ public static class Program
         _ = app.UseRouting();
         _ = app.UseAuthentication();
         _ = app.UseAuthorization();
+        _ = app.UseMiddleware<RequestResponseLoggingMiddleware>();
         _ = app.MapControllers();
         _ = app.MapHealthEndpoints();
 

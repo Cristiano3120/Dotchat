@@ -1,10 +1,16 @@
-﻿using DotchatClient.src.Core;
+﻿using DotchatClient.src.Application.Interfaces;
+using DotchatClient.src.Core;
+using DotchatClient.src.Core.DTOs;
+using DotchatShared.src.Constants;
+using DotchatShared.src.DTOs;
+using DotchatShared.src.DTOs.AuthRequests;
+using DotchatShared.src.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
 namespace DotchatClient.Components.Pages;
 
-public partial class Register
+public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService deviceInfoService, IUrlBuilder urlBuilder)
 {
     private const string GitHubSvg = ImagePaths.GitHubSvg;
     private const string EyeSvg = ImagePaths.PasswordEyeSvg;
@@ -15,18 +21,18 @@ public partial class Register
     private const int MaxUsernameLength = 24;
     private const int MaxBioLength = 250;
 
-    private string Email = string.Empty;
-    private string Username = string.Empty;
-    private string DisplayName = string.Empty;
-    private string Password = string.Empty;
+    private string Email = "Cristianocx7@gmail.com"; //Fields leer? Acc existiert bereits? 
+    private string Username = "Cristiano";
+    private string DisplayName = "Cris";
+    private string Password = "Cristiano2007!";
     private string Bio = string.Empty;
-    private DateTime? Birthday;
+    private DateOnly? Birthday = DateOnly.FromDateTime(DateTime.UtcNow);
 
     private string? ErrorMessage;
     private bool ShowPassword;
     private bool IsLoading;
 
-    private readonly string _today = DateTime.Today.ToString("yyyy-MM-dd");
+    private readonly string _today = DateTime.UtcNow.Date.ToString("yyyy-MM-dd");
     private ElementReference _birthdayInput;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -62,8 +68,33 @@ public partial class Register
     {
         IsLoading = true;
         StateHasChanged();
+        
+        RegisterRequest registerRequest = new
+        (
+            Email: Email,
+            Password: Password,
+            Username: Username,
+            Platform: deviceInfoService.GetPlatform(),
+            Birthday: Birthday,
+            DeviceId: deviceInfoService.GetDeviceId(),
+            DisplayName: DisplayName,
+            Bio: Bio,
+            DeviceName: deviceInfoService.GetDeviceName()
+        ); 
 
-        // TODO: Register-Request an Backend
+        string registerUrl = urlBuilder.AddUrl(Endpoints.AuthEndpoints.RegisterEndpoint).Build();
+        Result<JwtClientData, ApiError> result = await httpApiClient.PostAsync<RegisterRequest, JwtClientData>(registerUrl, registerRequest);
+        if (result.IsOperationSuccess)
+        {
+            ErrorMessage = "True"; //TODO: Mach local field test also check ob leer/valid via regex bei email und implement 
+                                   // vernünftige error messages musst validation errors die vom server kopmmen mappen
+            //Save Jwt
+            //Navigate to /home
+        }
+        else
+        {
+            ErrorMessage = $"Fehler beim Anmelden: {result.Error.Title}"; //TODO: Localize
+        }
 
         IsLoading = false;
         StateHasChanged();

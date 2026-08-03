@@ -2,7 +2,6 @@
 using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Application.DTOs.Emails;
-using DotchatServer.src.Application.DTOs.JwtModels;
 using DotchatServer.src.Application.DTOs.TemplateModels;
 using DotchatServer.src.Application.Enums;
 using DotchatServer.src.Application.Factories;
@@ -53,18 +52,17 @@ internal sealed class AuthService(
                 return new LoginError(LoginErrorType.WrongCredentials);
             }
 
-            JwtClientData jwtClientData = jwtService.GenerateToken(user.Id, user.Email);
-            byte[] tokenHash = hashingService.Hash(jwtClientData.AccessToken);
-            RefreshTokenInfo refreshTokenInfo = new(expiry: jwtClientData.Expiry, loginRequest.DeviceName)
+            JwtClientData jwtClientData = jwtService.GenerateJwtClientData(user.Id, loginRequest.DeviceId);
+            RefreshTokenInfo refreshTokenInfo = new(expiry: jwtService.DefaultRefreshTokenExpiry, loginRequest.DeviceName)
             {
                 UserId = user.Id,
                 DeviceId = loginRequest.DeviceId,
                 Platform = loginRequest.Platform,
-                TokenHash = tokenHash,
+                TokenHash = hashingService.Hash(jwtClientData.RefreshToken),
             };
 
             await authRepository.UpsertRefreshTokenAsync(refreshTokenInfo);
-            return new LoginResponse(jwtClientData);
+            return new LoginSuccess(jwtClientData);
         }
         catch (Exception ex)
         {
@@ -97,8 +95,8 @@ internal sealed class AuthService(
                 DisplayName = registerRequest.DisplayName,
                 Birthday = registerRequest.Birthday,
             }; 
-            JwtClientData jwtClientData = jwtService.GenerateToken(user.Id, registerRequest.Email);
-            RefreshTokenInfo tokenInfo = new(jwtClientData.Expiry, registerRequest.DeviceName)
+            JwtClientData jwtClientData = jwtService.GenerateJwtClientData(user.Id, registerRequest.DeviceId);
+            RefreshTokenInfo tokenInfo = new(jwtService.DefaultRefreshTokenExpiry, registerRequest.DeviceName) 
             {
                 UserId = user.Id,
                 DeviceId = registerRequest.DeviceId,
@@ -110,7 +108,7 @@ internal sealed class AuthService(
             await authRepository.RegisterUserAsync(user, tokenInfo);
             TrySendVerificationEmailAsync(user, language).FireAndForget();
 
-            return new RegisterResponse(jwtClientData);
+            return new RegisterSuccess(jwtClientData);
         }
         catch (Exception ex)
         {
@@ -119,14 +117,6 @@ internal sealed class AuthService(
         }
     }
 
-    /// <summary>
-    /// Resends a verification email to the user with the given userID. 
-    /// If the user's email is already confirmed, a template indicating that is returned instead.
-    /// </summary>
-    /// <param name="userID">The ID of the user to resend the verification email to.</param>
-    /// <param name="resendUrl">The URL to include in the verification email for resending confirmation.</param>
-    /// <param name="lang">The language or culture code used to localize the returned status template.</param>
-    /// <returns>An IHtmlRenderable containing the localized email confirmation status view.</returns>
     public async Task<IHtmlRenderable> ResendVerificationEmailAsync(Snowflake userID, string lang)
     {
         try
@@ -154,15 +144,6 @@ internal sealed class AuthService(
         }
     }
 
-    /// <summary>
-    /// Confirms a user's email using the provided verification token and returns a localized HTML status view.
-    /// </summary>
-    /// <remarks>Validates the token in Redis, logs failures, invokes the authentication repository to mark
-    /// the email as confirmed, deletes the token from cache on success, and selects the appropriate HTML template for
-    /// the result.</remarks>
-    /// <param name="token">Verificatio22007n token containing the user identifier and token value used to confirm the email.</param>
-    /// <param name="language">Language or culture code used to localize the returned status template.</param>
-    /// <returns>An IHtmlRenderable containing the localized email confirmation status view.</returns>
     public async Task<IHtmlRenderable> ConfirmEmailAsync(VerificationToken token, string language)
     {
         string resendUrl = BuildResendUrl(token.UserId);
@@ -188,6 +169,34 @@ internal sealed class AuthService(
         {
             Log.Error("Error accoured while trying to confirm the email: {ex}", ex);
             return await CreateEmailConfirmationFailedServerFaultTemplateAsync(resendUrl, language);
+        }
+    }
+
+    public async Task<RefreshResult> RefreshAccessTokenAsync(string refreshToken)
+    {
+        try
+        {
+            Log.Debug("Refreshing access token with refresh token: {RefreshToken}", refreshToken);
+
+            byte[] tokenHash = hashingService.Hash(refreshToken);
+            RefreshTokenInfo? tokenInfo = await authRepository.GetRefreshTokenInfoAsync(tokenHash);
+
+            if (tokenInfo is null || !tokenInfo.IsValid)
+            {
+                //User needs to login again
+                return new RefreshError(RefreshErrorType.InvalidToken);
+            }
+
+            DateTimeOffset lastUsedAt = DateTimeOffset.UtcNow;
+            await authRepository.UpdateRefreshTokenInfoAsync(tokenInfo.UserId, x => x.SetProperty(p => p.LastUsedAt, lastUsedAt));
+
+            AccessTokenInfo accessTokenInfo = jwtService.GenerateAccessToken(tokenInfo.UserId, tokenInfo.DeviceId);
+            return new RefreshSuccess(accessTokenInfo);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Error occurred while trying to refresh access token: {ex}", ex);
+            return new RefreshError(RefreshErrorType.DbUnavailable);
         }
     }
 

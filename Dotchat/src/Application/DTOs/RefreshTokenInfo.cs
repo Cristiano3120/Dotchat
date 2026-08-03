@@ -8,7 +8,7 @@ namespace DotchatServer.src.Application.DTOs;
 /// Relationship is 1:n (one user can have many tokens, one per device) to support
 /// concurrent logins from multiple devices/sessions.
 /// </summary>
-public sealed class RefreshTokenInfo
+public sealed record RefreshTokenInfo
 {
     public Guid Id { get; private init; }
 
@@ -44,13 +44,13 @@ public sealed class RefreshTokenInfo
     /// <summary>Optional platform tag, e.g. "iOS", "Android", "Web".</summary>
     public required Platform Platform { get; init; }
 
-    public DateTime CreatedAt { get; private init; }
+    public DateTimeOffset CreatedAt { get; private init; }
 
     /// <summary>Natural expiry, set at issuance. Independent of <see cref="RevokedAt"/>.</summary>
-    public DateTime ExpiresAt { get; private init; }
+    public DateTimeOffset ExpiresAt { get; private init; }
 
     /// <summary>Updated on every successful refresh; useful for showing "last active" and for cleanup.</summary>
-    public DateTime LastUsedAt { get; set; }
+    public DateTimeOffset LastUsedAt { get; set; }
 
     /// <summary>
     /// Timestamp of explicit invalidation (logout, password change, suspected theft,
@@ -61,10 +61,13 @@ public sealed class RefreshTokenInfo
     /// from "never existed", while a revoked-but-still-used token is a strong signal
     /// of token theft (see reuse detection below) and is worth logging/alerting on.
     /// </summary>
-    public DateTime? RevokedAt { get; set; }
-
+    public DateTimeOffset? RevokedAt { get; set; }
     public bool IsRevoked => RevokedAt is not null;
     public bool IsExpired => ExpiresAt < DateTime.UtcNow;
+
+    /// <summary>
+    /// Checks if the Token is expired or revoked
+    /// </summary>
     public bool IsValid => !IsRevoked && !IsExpired;
 
     public RefreshTokenInfo(TimeSpan expiry, string? deviceName)
@@ -72,7 +75,7 @@ public sealed class RefreshTokenInfo
         Id = Guid.NewGuid();
         DeviceName = deviceName;
 
-        DateTime currentTime = DateTime.UtcNow;
+        DateTimeOffset currentTime = DateTimeOffset.UtcNow;
         ExpiresAt = currentTime + expiry;
         LastUsedAt = currentTime;
         CreatedAt = currentTime;

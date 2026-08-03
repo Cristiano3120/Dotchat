@@ -126,5 +126,34 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
         );
     }
 
+    [HttpPost(Endpoints.AuthEndpoints.RefreshAccessToken, Name = Endpoints.AuthEndpoints.RefreshAccessToken)]
+    public async Task<IActionResult> RefreshAccessTokenAsync([FromBody] string refreshToken)
+    {
+        RefreshResult refreshResult = await authService.RefreshAccessTokenAsync(refreshToken);
+        return refreshResult.Match<IActionResult>(
+            Ok,
+            error => error.RefreshErrorType switch
+            {
+                RefreshErrorType.InvalidToken => Problem(
+                    statusCode: (int)HttpStatusCode.Unauthorized,
+                    title: "Invalid token",
+                    type: ProblemDetailsTypes.Auth.InvalidToken,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        { ProblemDetailsExtensions.ApiErrorCode, ApiErrorCode.WrongCredentials }
+                    }),
+                RefreshErrorType.DbUnavailable => Problem(
+                    statusCode: (int)HttpStatusCode.ServiceUnavailable,
+                    title: "Service unavailable",
+                    type: ProblemDetailsTypes.Auth.DbUnavailable,
+                    extensions: new Dictionary<string, object?>
+                    {
+                        { ProblemDetailsExtensions.ApiErrorCode, ApiErrorCode.DbUnavailable }
+                    }),
+                _ => Problem(statusCode: (int)HttpStatusCode.InternalServerError)
+            }
+        );
+    }
+
     private string GetClientLanguage() => HttpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture.Culture.TwoLetterISOLanguageName ?? "en";
 }

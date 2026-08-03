@@ -9,7 +9,7 @@ public sealed record RegisterCommand(
     string Username,
     string DisplayName,
     Platform Platform,
-    DateTimeOffset Birthday,
+    DateOnly Birthday,
     Guid DeviceId,
     string? DeviceName
 )

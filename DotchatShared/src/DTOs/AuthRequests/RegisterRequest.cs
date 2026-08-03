@@ -19,9 +19,9 @@ public sealed record RegisterRequest(
     [Required][MinLength(8)] string Password,
     [Required][MinLength(3)][MaxLength(24)][RegularExpression(@"^[a-zA-Z0-9_.-]+$")] string Username,
     [Required][EnumDataType(typeof(Platform))] Platform? Platform,
-    [Required] DateTimeOffset? Birthday,
+    [Required] DateOnly? Birthday,
     [Required] Guid? DeviceId,
     [Required][MinLength(1)][MaxLength(24)] string DisplayName,
-    [MaxLength(100)] string? DeviceName,
-    [MaxLength(250)] string Bio
+    [MaxLength(250)] string Bio,
+    [MaxLength(100)] string DeviceName
 );
