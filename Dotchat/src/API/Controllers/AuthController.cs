@@ -68,7 +68,7 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
         return registerResult.Match(
             Ok, // Success case: return 200 OK with the result
             error => error.Type switch
-            {
+            { 
                 RegisterErrorType.EmailTaken or RegisterErrorType.UsernameTaken => Problem(
                     statusCode: (int)HttpStatusCode.Conflict,
                     title: "Email or username already taken",

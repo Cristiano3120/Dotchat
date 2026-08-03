@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using DotchatShared.src.Enums;
+using RRR = DotchatShared.src.Constants.RegisterRequestRules;
 
 namespace DotchatShared.src.DTOs.AuthRequests;
 
@@ -16,12 +17,12 @@ namespace DotchatShared.src.DTOs.AuthRequests;
 /// <param name="Birthday">The user's date of birth.</param>
 public sealed record RegisterRequest(
     [Required][EmailAddress] string Email,
-    [Required][MinLength(8)] string Password,
-    [Required][MinLength(3)][MaxLength(24)][RegularExpression(@"^[a-zA-Z0-9_.-]+$")] string Username,
+    [Required][MinLength(RRR.MinPasswordLength)] string Password,
+    [Required][MinLength(RRR.MinUsernameLength)][MaxLength(RRR.MaxUsernameLength)][RegularExpression(@"^[a-zA-Z0-9_.-]+$")] string Username,
     [Required][EnumDataType(typeof(Platform))] Platform? Platform,
     [Required] DateOnly? Birthday,
     [Required] Guid? DeviceId,
-    [Required][MinLength(1)][MaxLength(24)] string DisplayName,
-    [MaxLength(250)] string Bio,
-    [MaxLength(100)] string DeviceName
+    [Required][MinLength(RRR.MinDisplayNameLength)][MaxLength(RRR.MaxDisplayNameLength)] string DisplayName,
+    [MaxLength(RRR.MaxBioLength)] string Bio,
+    [Required] string DeviceName
 );

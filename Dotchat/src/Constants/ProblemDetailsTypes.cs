@@ -5,6 +5,7 @@
 /// </summary>
 public static class ProblemDetailsTypes
 {
+    public const string ValidationError = "validation-error";
     public static class Auth
     {
         public const string WrongCredentials = "auth/wrong-credentials";

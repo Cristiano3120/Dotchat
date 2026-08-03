@@ -1,6 +1,3 @@
-using System.Globalization;
-using System.Text;
-
 using Destructurama;
 using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.Extensions;
@@ -12,18 +9,21 @@ using DotchatServer.src.Core.Entities;
 using DotchatServer.src.Core.Extensions;
 using DotchatServer.src.Infrastructure;
 using DotchatShared.src.Constants;
+using DotchatShared.src.Enums;
 using DotchatShared.src.Services;
 using DotNetEnv;
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RedisRateLimiting;
-
 using Serilog.Events;
 using StackExchange.Redis;
+using System.Globalization;
+using System.Net;
+using System.Text;
 
 namespace DotchatServer.src;
 
@@ -104,7 +104,26 @@ public static class Program
             httpClient.Timeout = TimeSpan.FromSeconds(10);
             httpClient.BaseAddress = new Uri(urlBuilder.AddUrl(Endpoints.HealthEndpoints.BaseHealthEndpoint).Build() + "/");//Slash neeeded for correct URL building if the slash is missing the path will be api/live instead of api/health/live...
         });
-        //TODO: Mach nen pipeline warmup. Injecte HTTP CLient Factory und rufe den Health Endpoint auf
+
+        builder.Services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.InvalidModelStateResponseFactory = context =>
+            {
+                string combinedTitle = string.Join(" ", context.ModelState
+            .Where(kvp => kvp.Value?.Errors.Count > 0)
+            .SelectMany(kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage)));
+                ProblemDetails problemDetails = new()
+                {
+                    Type = ProblemDetailsTypes.ValidationError,
+                    Status = (int)HttpStatusCode.BadRequest,
+                    Title = combinedTitle,//context.ModelState.FirstOrDefault().Value?.Errors.FirstOrDefault()?.ErrorMessage ?? "Validation failed"
+                    Extensions = { [ProblemDetailsExtensions.ApiErrorCode] = ApiErrorCode.ValidationFailed }
+                };
+
+                return new BadRequestObjectResult(problemDetails);
+            };
+        });
+
         WebApplication app = builder.Build();
 
         _ = app.Use(async (context, next) =>

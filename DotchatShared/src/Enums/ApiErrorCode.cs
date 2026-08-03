@@ -16,4 +16,10 @@ public enum ApiErrorCode : byte
     //Server-side errors
     WrongCredentials,
     DbUnavailable,
+
+    /// <summary>
+    /// Accours when a request fails validation, such as when required fields are missing. 
+    /// This is automatically handled by the framework when using Data Annotations in DTOs, resulting in a 400 Bad Request response.
+    /// </summary>
+    ValidationFailed,
 }

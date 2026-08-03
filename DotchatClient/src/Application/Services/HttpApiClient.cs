@@ -114,6 +114,7 @@ internal sealed class HttpApiClient(IJwtTokenStorage jwtTokenStorage, HttpClient
             };
         }
 
+        //The Server normally returns the ApiErrorCode in the ProblemDetails extensions
         ApiErrorCode errorCode = ApiErrorCode.SameAsStatusCode;
         if (problemDetails?.Extensions?.TryGetValue(ProblemDetailsExtensions.ApiErrorCode, out JsonElement errorCodeValue) ?? false)
         {
