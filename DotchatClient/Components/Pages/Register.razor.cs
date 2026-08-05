@@ -18,11 +18,19 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
     private const string ClosedEyeSvg = ImagePaths.ClosedPasswordEyeSvg;
     private const string GoogleSvg = ImagePaths.GoogleSvg;
     private const string DotchatSvg = ImagePaths.DotchatSvg;
+    private const int MinDisplayNameLength = RegisterRequestRules.MinDisplayNameLength;
     private const int MaxDisplayNameLength = RegisterRequestRules.MaxDisplayNameLength;
+    private const int MinUsernameLength = RegisterRequestRules.MinUsernameLength;
+    private const int MinPasswordLength = RegisterRequestRules.MinPasswordLength;
     private const int MaxUsernameLength = RegisterRequestRules.MaxUsernameLength;
     private const int MaxBioLength = RegisterRequestRules.MaxBioLength;
+    private const int RecommendedPasswordLength = 16;
+    private const string AtLimitClass = "at-limit";
+    private const string NearLimitClass = "near-limit";
+    private const string RecommendedClass = "recommended";
+    private const string DefaultClass = "";
 
-    private string Email = "Cristianocx7@gmail.com"; 
+    private string Email = "Cristianocx7@gmail.com"; //TODO: Mach das Password und Username und so nen min chars wert haben der dann halt am start rot ist
     private string Username = "Cristiano";
     private string DisplayName = "Cris";
     private string Password = "Cristiano2007!";
@@ -57,12 +65,55 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
         float nearLimitThreshold = 0.8f;
         if (current >= max)
         {
-            return "at-limit";
+            return AtLimitClass;
         }
 
         return current >= max * nearLimitThreshold
-            ? "near-limit"
-            : "";
+            ? NearLimitClass
+            : DefaultClass;
+    }
+
+    /// <summary>
+    /// Calculates the state of the input count. For example if a textbox needs a minimum of 8 chars 
+    /// and a recommended amount of 12 chars the color of the count will be red till 8 chars,
+    /// yellow till 12 chars and green after that
+    /// </summary>
+    /// <param name="current"></param>
+    /// <param name="min"></param>
+    /// <param name="recommended"></param>
+    /// <returns></returns>
+    private static string GetRecommendedCountClass(int current, int min, int recommended)
+    {
+        if (current < min)
+        {
+            return AtLimitClass;
+        }
+
+        if (current < recommended)
+        {
+            return NearLimitClass;
+        }
+
+        return RecommendedClass;// Mach nen min max ding
+    }
+
+    private static string GetMinMaxCountClass(int current, int min, int max)
+    {
+        if (current < min)
+        {
+            return AtLimitClass; //TODO: mach in ne property
+        }
+
+        if (current >= max)
+        {
+            return AtLimitClass;
+        }
+
+        float nearLimitThreshold = 0.8f;
+        return current >= max * nearLimitThreshold
+            ? NearLimitClass
+            : DefaultClass;
+
     }
 
     private async Task HandleRegisterAsync()
@@ -116,7 +167,6 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
 
     private bool ValidateFields()
     {
-        return true;
         Result<Unit, string> currentValidation = ValidateEmail(Email);
         if (!currentValidation.IsOperationSuccess)
         {
@@ -189,9 +239,9 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
             return "Passwort darf nicht leer sein.";
         }
 
-        if (password.Length < RegisterRequestRules.MinPasswordLength)
+        if (password.Length < MinPasswordLength)
         {
-            return $"Passwort muss mindestens {RegisterRequestRules.MinPasswordLength} Zeichen lang sein.";
+            return $"Passwort muss mindestens {MinPasswordLength} Zeichen lang sein.";
         }
 
         return new Unit();
@@ -204,14 +254,14 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
             return "Benutzername darf nicht leer sein.";
         }
 
-        if (username.Length < RegisterRequestRules.MinUsernameLength)
+        if (username.Length < MinUsernameLength)
         {
-            return $"Benutzername muss mindestens {RegisterRequestRules.MinUsernameLength} Zeichen lang sein.";
+            return $"Benutzername muss mindestens {MinUsernameLength} Zeichen lang sein.";
         }
 
-        if (username.Length > RegisterRequestRules.MaxUsernameLength)
+        if (username.Length > MaxUsernameLength)
         {
-            return $"Benutzername darf höchstens {RegisterRequestRules.MaxUsernameLength} Zeichen lang sein.";
+            return $"Benutzername darf höchstens {MaxUsernameLength} Zeichen lang sein.";
         }
 
         return new Unit();
@@ -224,14 +274,14 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
             return "Anzeigename darf nicht leer sein.";
         }
 
-        if (displayName.Length < RegisterRequestRules.MinDisplayNameLength)
+        if (displayName.Length < MinDisplayNameLength)
         {
-            return $"Anzeigename muss mindestens {RegisterRequestRules.MinDisplayNameLength} Zeichen lang sein.";
+            return $"Anzeigename muss mindestens {MinDisplayNameLength} Zeichen lang sein.";
         }
 
-        if (displayName.Length > RegisterRequestRules.MaxDisplayNameLength)
+        if (displayName.Length > MaxDisplayNameLength)
         {
-           return $"Anzeigename darf höchstens {RegisterRequestRules.MaxDisplayNameLength} Zeichen lang sein.";
+           return $"Anzeigename darf höchstens {MaxDisplayNameLength} Zeichen lang sein.";
         }
 
         return new Unit();
@@ -239,9 +289,9 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
 
     private static Result<Unit, string> ValidateBio(string bio)
     {
-        if (bio.Length > RegisterRequestRules.MaxBioLength)
+        if (bio.Length > MaxBioLength)
         {
-            return $"Bio darf höchstens {RegisterRequestRules.MaxBioLength} Zeichen lang sein.";
+            return $"Bio darf höchstens {MaxBioLength} Zeichen lang sein.";
         }
 
         return new Unit();

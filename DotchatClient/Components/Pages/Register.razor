@@ -125,6 +125,10 @@
             color: #f08080;
         }
 
+        .char-count.recommended {
+            color: #2df244;
+        }
+
     .input-wrap {
         position: relative;
     }
@@ -347,7 +351,10 @@
         </div>
 
         <div class="field">
-            <label>PASSWORT</label>
+            <div class="label-row">
+                <label>PASSWORT</label>
+                <span class="char-count @GetRecommendedCountClass(Password.Length, MinPasswordLength, RecommendedPasswordLength)">@Password.Length/@MinPasswordLength</span>
+            </div>
             <div class="input-wrap">
                 <span class="input-icon">🔒</span>
                 <input type="@(ShowPassword ? "text" : "password")"
@@ -363,7 +370,7 @@
         <div class="field">
             <div class="label-row">
                 <label>USERNAME</label>
-                <span class="char-count @GetCountClass(Username.Length, MaxUsernameLength)">@Username.Length/@MaxUsernameLength</span>
+                <span class="char-count @GetMinMaxCountClass(Username.Length, MinUsernameLength, MaxUsernameLength)">@Username.Length/@MaxUsernameLength</span>
             </div>
             <div class="input-wrap">
                 <span class="input-icon">@@</span>
@@ -374,7 +381,7 @@
         <div class="field">
             <div class="label-row">
                 <label>ANZEIGENAME</label>
-                <span class="char-count @GetCountClass(DisplayName.Length, MaxDisplayNameLength)">@DisplayName.Length/@MaxDisplayNameLength</span>
+                <span class="char-count @GetMinMaxCountClass(DisplayName.Length, MinDisplayNameLength, MaxDisplayNameLength)">@DisplayName.Length/@MaxDisplayNameLength</span>
             </div>
             <div class="input-wrap">
                 <span class="input-icon">👤</span>
