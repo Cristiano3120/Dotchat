@@ -1,5 +1,7 @@
-﻿using DotchatClient.src.Application.Interfaces;
-using DotchatClient.src.Core;
+﻿using DotchatClient.src.Application;
+using DotchatClient.src.Application.Interfaces;
+using DotchatClient.src.Application.Services;
+using DotchatClient.src.Core.Consts;
 using DotchatClient.src.Core.DTOs;
 using DotchatShared.src.Constants;
 using DotchatShared.src.DTOs;
@@ -7,44 +9,26 @@ using DotchatShared.src.DTOs.AuthRequests;
 using DotchatShared.src.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using System.Net.Mail;
-using System.Text.RegularExpressions;
 
 namespace DotchatClient.Components.Pages;
 
-public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService deviceInfoService, IUrlBuilder urlBuilder)
+public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService deviceInfoService, IUrlBuilder urlBuilder, Js js) : AuthComponentBase
 {
-    [GeneratedRegex(@"^[a-zA-Z0-9_.-]+$")]
-    private static partial Regex PasswordRegex();
-
-    private const string GitHubSvg = ImagePaths.GitHubSvg;
-    private const string EyeSvg = ImagePaths.PasswordEyeSvg;
-    private const string ClosedEyeSvg = ImagePaths.ClosedPasswordEyeSvg;
-    private const string GoogleSvg = ImagePaths.GoogleSvg;
-    private const string DotchatSvg = ImagePaths.DotchatSvg;
-    private const int MinDisplayNameLength = RegisterRequestRules.MinDisplayNameLength;
-    private const int MaxDisplayNameLength = RegisterRequestRules.MaxDisplayNameLength;
-    private const int MinUsernameLength = RegisterRequestRules.MinUsernameLength;
-    private const int MinPasswordLength = RegisterRequestRules.MinPasswordLength;
-    private const int MaxPasswordLength = RegisterRequestRules.MaxPasswordLength;
-    private const int MaxUsernameLength = RegisterRequestRules.MaxUsernameLength;
-    private const int MaxBioLength = RegisterRequestRules.MaxBioLength;
+    private const int MinDisplayNameLength = AuthRequestRules.MinDisplayNameLength;
+    private const int MaxDisplayNameLength = AuthRequestRules.MaxDisplayNameLength;
+    private const int MinUsernameLength = AuthRequestRules.MinUsernameLength;
+    private const int MaxUsernameLength = AuthRequestRules.MaxUsernameLength;
+    private const int MaxBioLength = AuthRequestRules.MaxBioLength;
     private const int RecommendedPasswordLength = 16;
     private const string AtLimitClass = "at-limit";
     private const string NearLimitClass = "near-limit";
     private const string RecommendedClass = "recommended";
     private const string DefaultClass = "";
 
-    private string Email = string.Empty;
     private string Username = string.Empty;
     private string DisplayName = string.Empty;
-    private string Password = string.Empty;
     private string Bio = string.Empty;
     private DateOnly? Birthday = DateOnly.FromDateTime(DateTime.UtcNow);
-
-    private string? ErrorMessage;
-    private bool ShowPassword;
-    private bool IsLoading;
 
     private readonly string _today = DateTime.UtcNow.Date.ToString("yyyy-MM-dd");
     private ElementReference _birthdayInput;
@@ -55,7 +39,7 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
         {
             try
             {
-                await JS.InvokeVoidAsync("limitDateYear", _birthdayInput);
+                await js.LimitDateYearAsync(_birthdayInput);
             }
             catch (InvalidOperationException) { } //WebView not ready :(
         }
@@ -67,13 +51,13 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
     /// </summary>
     private static string GetCountClass(int current, int max)
     {
-        float nearLimitThreshold = 0.8f;
+        const float NearLimitThreshold = 0.8f;
         if (current >= max)
         {
             return AtLimitClass;
         }
 
-        return current >= max * nearLimitThreshold
+        return current >= max * NearLimitThreshold
             ? NearLimitClass
             : DefaultClass;
     }
@@ -99,8 +83,8 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
             return NearLimitClass;
         }
 
-        float nearLimitThreshold = 0.9f;
-        if (current > max * nearLimitThreshold && current < max)
+        const float NearLimitThreshold = 0.9f;
+        if (current > max * NearLimitThreshold && current < max)
         {
             return NearLimitClass;
         }
@@ -125,8 +109,8 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
             return AtLimitClass;
         }
 
-        float nearLimitThreshold = 0.8f;
-        return current >= max * nearLimitThreshold
+        const float NearLimitThreshold = 0.8f;
+        return current >= max * NearLimitThreshold
             ? NearLimitClass
             : DefaultClass;
 
@@ -182,42 +166,42 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
 
     private bool ValidateFields()
     {
-        Result<Unit, string> currentValidation = ValidateEmail(Email);
+        Result<Unit, string> currentValidation = AuthValidator.ValidateEmail(Email);
         if (!currentValidation.IsOperationSuccess)
         {
             ErrorMessage = currentValidation.Error;
             return false;
         }
 
-        currentValidation = ValidatePassword(Password);
+        currentValidation = AuthValidator.ValidatePassword(Password);
         if (!currentValidation.IsOperationSuccess)
         {
             ErrorMessage = currentValidation.Error;
             return false;
         }
 
-        currentValidation = ValidateUsername(Username);
+        currentValidation = AuthValidator.ValidateUsername(Username);
         if (!currentValidation.IsOperationSuccess)
         {
             ErrorMessage = currentValidation.Error;
             return false;
         }
 
-        currentValidation = ValidateDisplayName(DisplayName);
+        currentValidation = AuthValidator.ValidateDisplayName(DisplayName);
         if (!currentValidation.IsOperationSuccess)
         {
             ErrorMessage = currentValidation.Error;
             return false;
         }
 
-        currentValidation = ValidateBio(Bio);
+        currentValidation = AuthValidator.ValidateBio(Bio);
         if (!currentValidation.IsOperationSuccess)
         {
             ErrorMessage = currentValidation.Error;
             return false;
         }
 
-        currentValidation = ValidateBirthday(Birthday);
+        currentValidation = AuthValidator.ValidateBirthday(Birthday);
         if (!currentValidation.IsOperationSuccess)
         {
             ErrorMessage = currentValidation.Error;
@@ -225,110 +209,5 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
         }
 
         return true;
-    }
-
-    private static Result<Unit, string> ValidateEmail(string email)
-    {
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            return "Email darf nicht leer sein.";
-        }
-
-        try
-        {
-            MailAddress addr = new(email);
-            return addr.Address == email
-                ? new Unit()
-                : "Ungültige Email-Adresse.";
-        }
-        catch
-        {
-            return "Ungültige Email-Adresse.";
-        }
-    }
-
-    private static Result<Unit, string> ValidatePassword(string password)
-    {
-        if (string.IsNullOrWhiteSpace(password))
-        {
-            return "Passwort darf nicht leer sein.";
-        }
-
-        if (password.Length < MinPasswordLength)
-        {
-            return $"Passwort muss mindestens {MinPasswordLength} Zeichen lang sein.";
-        }
-
-        if (!PasswordRegex().IsMatch(password))
-        {
-            return "Passwort enthält ungültige Zeichen. Nur Buchstaben, Zahlen und die Sonderzeichen _, ., -, + sind erlaubt.";
-        }
-
-        return new Unit();
-    }
-
-    private static Result<Unit, string> ValidateUsername(string username)
-    {
-        if (string.IsNullOrWhiteSpace(username))
-        {
-            return "Benutzername darf nicht leer sein.";
-        }
-
-        if (username.Length < MinUsernameLength)
-        {
-            return $"Benutzername muss mindestens {MinUsernameLength} Zeichen lang sein.";
-        }
-
-        if (username.Length > MaxUsernameLength)
-        {
-            return $"Benutzername darf höchstens {MaxUsernameLength} Zeichen lang sein.";
-        }
-
-        return new Unit();
-    }
-
-    private static Result<Unit, string> ValidateDisplayName(string displayName)
-    {
-        if (string.IsNullOrWhiteSpace(displayName))
-        {
-            return "Anzeigename darf nicht leer sein.";
-        }
-
-        if (displayName.Length < MinDisplayNameLength)
-        {
-            return $"Anzeigename muss mindestens {MinDisplayNameLength} Zeichen lang sein.";
-        }
-
-        if (displayName.Length > MaxDisplayNameLength)
-        {
-           return $"Anzeigename darf höchstens {MaxDisplayNameLength} Zeichen lang sein.";
-        }
-
-        return new Unit();
-    }
-
-    private static Result<Unit, string> ValidateBio(string bio)
-    {
-        if (bio.Length > MaxBioLength)
-        {
-            return $"Bio darf höchstens {MaxBioLength} Zeichen lang sein.";
-        }
-
-        return new Unit();
-    }
-
-    private static Result<Unit, string> ValidateBirthday(DateOnly? birthday)
-    {
-        if (!birthday.HasValue)
-        {
-            return "Geburtsdatum darf nicht leer sein.";
-        }
-
-        if (birthday.Value > DateOnly.FromDateTime(DateTime.UtcNow))
-        {
-            return "Geburtsdatum darf nicht in der Zukunft liegen.";
-        }
-
-        return new Unit();
     }
 }

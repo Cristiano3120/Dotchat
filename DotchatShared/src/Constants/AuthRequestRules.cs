@@ -1,6 +1,6 @@
 ﻿namespace DotchatShared.src.Constants;
 
-public static class RegisterRequestRules
+public static class AuthRequestRules
 {
     public const int MinPasswordLength = 8;
     public const int MaxPasswordLength = 72;

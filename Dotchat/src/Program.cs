@@ -110,13 +110,14 @@ public static class Program
             options.InvalidModelStateResponseFactory = context =>
             {
                 string combinedTitle = string.Join(" ", context.ModelState
-            .Where(kvp => kvp.Value?.Errors.Count > 0)
-            .SelectMany(kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage)));
+                    .Where(kvp => kvp.Value?.Errors.Count > 0)
+                    .SelectMany(kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage)));
+
                 ProblemDetails problemDetails = new()
                 {
                     Type = ProblemDetailsTypes.ValidationError,
                     Status = (int)HttpStatusCode.BadRequest,
-                    Title = combinedTitle,//context.ModelState.FirstOrDefault().Value?.Errors.FirstOrDefault()?.ErrorMessage ?? "Validation failed"
+                    Title = combinedTitle,
                     Extensions = { [ProblemDetailsExtensions.ApiErrorCode] = ApiErrorCode.ValidationFailed }
                 };
 

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using DotchatShared.src.Enums;
-using RRR = DotchatShared.src.Constants.RegisterRequestRules;
+using RRR = DotchatShared.src.Constants.AuthRequestRules;
 
 namespace DotchatShared.src.DTOs.AuthRequests;
 

@@ -12,7 +12,7 @@ namespace DotchatShared.src.DTOs.AuthRequests;
 /// <param name="Password">The password for the user account. Must be at least 8 characters in length.</param>
 public sealed record LoginRequest(
     [Required][EmailAddress] string Email,
-    [Required][MinLength(LoginRequestRules.MinPasswordLength)][MaxLength(LoginRequestRules.MaxPasswordLength)] string Password,
+    [Required][MinLength(AuthRequestRules.MinPasswordLength)][MaxLength(AuthRequestRules.MaxPasswordLength)] string Password,
     [Required][EnumDataType(typeof(Platform))] Platform Platform,
     [Required] Guid DeviceId,
     [MaxLength(100)] string DeviceName
