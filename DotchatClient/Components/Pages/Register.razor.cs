@@ -28,7 +28,7 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
     private string Username = string.Empty;
     private string DisplayName = string.Empty;
     private string Bio = string.Empty;
-    private DateOnly? Birthday = DateOnly.FromDateTime(DateTime.UtcNow);
+    private DateOnly? Birthday;
 
     private readonly string _today = DateTime.UtcNow.Date.ToString("yyyy-MM-dd");
     private ElementReference _birthdayInput;
@@ -118,13 +118,11 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
 
     private async Task HandleRegisterAsync()
     {
-        IsLoading = true;
-        StateHasChanged();
+        ToggleLoadingState();
 
         if (!ValidateFields())
         {
-            IsLoading = false;
-            StateHasChanged();
+            ToggleLoadingState();
             return;
         }
 
@@ -160,8 +158,7 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
             ErrorMessage = $"Fehler beim Anmelden: {result.Error.Title}"; //TODO: Localize
         }
 
-        IsLoading = false;
-        StateHasChanged();
+        ToggleLoadingState();
     }
 
     private bool ValidateFields()

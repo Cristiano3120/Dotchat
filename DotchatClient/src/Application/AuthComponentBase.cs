@@ -22,4 +22,14 @@ public abstract class AuthComponentBase : ComponentBase
     protected bool IsLoading { get; set; }
 
     protected void TogglePasswordVisibility() => ShowPassword = !ShowPassword;
+
+    /// <summary>
+    /// Toggles the loading state of the component and triggers a re-render.
+    /// Re-render is called manully cause to loading state change is called in async methods
+    /// </summary>
+    protected void ToggleLoadingState()
+    {
+        IsLoading = !IsLoading;
+        StateHasChanged();
+    }
 }

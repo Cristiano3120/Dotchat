@@ -1,6 +1,5 @@
 ﻿using DotchatClient.src.Application;
 using DotchatClient.src.Application.Interfaces;
-using DotchatClient.src.Application.Services;
 using DotchatClient.src.Core.DTOs;
 using DotchatShared.src.Constants;
 using DotchatShared.src.DTOs;
@@ -13,13 +12,11 @@ public partial class Login(IHttpApiClient httpApiClient, IDeviceInfoService devi
 {
     private async Task HandleLoginAsync()
     {
-        IsLoading = true;
-        StateHasChanged();
+        ToggleLoadingState();
 
         if (!ValidateFields())
         {
-            IsLoading = false;
-            StateHasChanged();
+            ToggleLoadingState();
             return;
         }
 
@@ -44,8 +41,7 @@ public partial class Login(IHttpApiClient httpApiClient, IDeviceInfoService devi
             ErrorMessage = $"Fehler beim Anmelden: {result.Error.ErrorCode}"; //TODO: Localize
         }
 
-        IsLoading = false;
-        StateHasChanged();
+        ToggleLoadingState();
     }
 
     private bool ValidateFields()
