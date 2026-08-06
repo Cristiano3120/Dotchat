@@ -17,7 +17,7 @@ namespace DotchatShared.src.DTOs.AuthRequests;
 /// <param name="Birthday">The user's date of birth.</param>
 public sealed record RegisterRequest(
     [Required][EmailAddress] string Email,
-    [Required][MinLength(RRR.MinPasswordLength)] string Password,
+    [Required][MinLength(RRR.MinPasswordLength)][MaxLength(RRR.MaxPasswordLength)] string Password,
     [Required][MinLength(RRR.MinUsernameLength)][MaxLength(RRR.MaxUsernameLength)][RegularExpression(@"^[a-zA-Z0-9_.-]+$")] string Username,
     [Required][EnumDataType(typeof(Platform))] Platform? Platform,
     [Required] DateOnly? Birthday,

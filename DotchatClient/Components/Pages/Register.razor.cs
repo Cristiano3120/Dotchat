@@ -8,11 +8,15 @@ using DotchatShared.src.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Net.Mail;
+using System.Text.RegularExpressions;
 
 namespace DotchatClient.Components.Pages;
 
 public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService deviceInfoService, IUrlBuilder urlBuilder)
 {
+    [GeneratedRegex(@"^[a-zA-Z0-9_.-]+$")]
+    private static partial Regex PasswordRegex();
+
     private const string GitHubSvg = ImagePaths.GitHubSvg;
     private const string EyeSvg = ImagePaths.PasswordEyeSvg;
     private const string ClosedEyeSvg = ImagePaths.ClosedPasswordEyeSvg;
@@ -22,6 +26,7 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
     private const int MaxDisplayNameLength = RegisterRequestRules.MaxDisplayNameLength;
     private const int MinUsernameLength = RegisterRequestRules.MinUsernameLength;
     private const int MinPasswordLength = RegisterRequestRules.MinPasswordLength;
+    private const int MaxPasswordLength = RegisterRequestRules.MaxPasswordLength;
     private const int MaxUsernameLength = RegisterRequestRules.MaxUsernameLength;
     private const int MaxBioLength = RegisterRequestRules.MaxBioLength;
     private const int RecommendedPasswordLength = 16;
@@ -30,10 +35,10 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
     private const string RecommendedClass = "recommended";
     private const string DefaultClass = "";
 
-    private string Email = "Cristianocx7@gmail.com"; //TODO: Mach das Password und Username und so nen min chars wert haben der dann halt am start rot ist
-    private string Username = "Cristiano";
-    private string DisplayName = "Cris";
-    private string Password = "Cristiano2007!";
+    private string Email = string.Empty;
+    private string Username = string.Empty;
+    private string DisplayName = string.Empty;
+    private string Password = string.Empty;
     private string Bio = string.Empty;
     private DateOnly? Birthday = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -82,7 +87,7 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
     /// <param name="min"></param>
     /// <param name="recommended"></param>
     /// <returns></returns>
-    private static string GetRecommendedCountClass(int current, int min, int recommended)
+    private static string GetRecommendedMinMaxCountClass(int current, int min, int recommended, int max)
     {
         if (current < min)
         {
@@ -94,7 +99,18 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
             return NearLimitClass;
         }
 
-        return RecommendedClass;// Mach nen min max ding
+        float nearLimitThreshold = 0.9f;
+        if (current > max * nearLimitThreshold && current < max)
+        {
+            return NearLimitClass;
+        }
+
+        if (current >= max)
+        {
+            return AtLimitClass;
+        }
+
+        return RecommendedClass;
     }
 
     private static string GetMinMaxCountClass(int current, int min, int max)
@@ -145,8 +161,7 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
         Result<JwtClientData, ApiError> result = await httpApiClient.PostAsync<RegisterRequest, JwtClientData>(registerUrl, registerRequest);
         if (result.IsOperationSuccess)
         {
-            ErrorMessage = "True"; //TODO: Mach local field test also check ob leer/valid via regex bei email und implement 
-                                   // vernünftige error messages musst validation errors die vom server kopmmen mappen
+            ErrorMessage = "True"; 
                                    //Save Jwt
                                    //Navigate to /home
             return;
@@ -242,6 +257,11 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
         if (password.Length < MinPasswordLength)
         {
             return $"Passwort muss mindestens {MinPasswordLength} Zeichen lang sein.";
+        }
+
+        if (!PasswordRegex().IsMatch(password))
+        {
+            return "Passwort enthält ungültige Zeichen. Nur Buchstaben, Zahlen und die Sonderzeichen _, ., -, + sind erlaubt.";
         }
 
         return new Unit();

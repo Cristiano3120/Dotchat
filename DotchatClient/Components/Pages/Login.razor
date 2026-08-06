@@ -303,7 +303,7 @@
                 <input type="@(ShowPassword ? "text" : "password")"
                        @bind="Password"
                        @bind:event="oninput"
-                       placeholder="********" />
+                       placeholder="********" minlength="@MinPasswordLength" maxlength="@MaxPasswordLength"/>
                 <button class="pw-toggle" @onclick="() => ShowPassword = !ShowPassword">
                     <img src="@(ShowPassword ? ClosedEyeSvg : EyeSvg)" alt="Passwort anzeigen" width="16" height="16" />
                 </button>

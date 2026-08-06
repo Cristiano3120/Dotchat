@@ -353,14 +353,14 @@
         <div class="field">
             <div class="label-row">
                 <label>PASSWORT</label>
-                <span class="char-count @GetRecommendedCountClass(Password.Length, MinPasswordLength, RecommendedPasswordLength)">@Password.Length/@MinPasswordLength</span>
+                <span class="char-count @GetRecommendedMinMaxCountClass(Password.Length, MinPasswordLength, RecommendedPasswordLength, MaxPasswordLength)">@Password.Length/@MaxPasswordLength</span>
             </div>
             <div class="input-wrap">
                 <span class="input-icon">🔒</span>
                 <input type="@(ShowPassword ? "text" : "password")"
                        @bind="Password"
                        @bind:event="oninput"
-                       placeholder="********" />
+                       placeholder="********" maxlength="@MaxPasswordLength"/>
                 <button class="pw-toggle" @onclick="() => ShowPassword = !ShowPassword">
                     <img src="@(ShowPassword ? ClosedEyeSvg : EyeSvg)" alt="Passwort anzeigen" width="16" height="16" />
                 </button>
