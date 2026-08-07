@@ -8,18 +8,14 @@ namespace DotchatClient.src.Application;
 
 internal static partial class AuthValidator
 {
-    [GeneratedRegex(@"^[a-zA-Z0-9_.-]+$")]
+    [GeneratedRegex(@"^[\x21-\x7E]+$")]
     private static partial Regex PasswordRegex();
 
     internal static Result<Unit, string> ValidateEmail(string email)
     {
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            return "Email darf nicht leer sein.";
-        }
-
         try
         {
+            //Checks for format and empty
             MailAddress addr = new(email);
             return addr.Address == email
                 ? new Unit()
@@ -30,7 +26,7 @@ internal static partial class AuthValidator
             return "Ungültige Email-Adresse.";
         }
     }
-
+    
     internal static Result<Unit, string> ValidatePassword(string password)
     {
         if (string.IsNullOrWhiteSpace(password))
@@ -50,7 +46,7 @@ internal static partial class AuthValidator
 
         if (!PasswordRegex().IsMatch(password))
         {
-            return "Passwort enthält ungültige Zeichen. Nur Buchstaben, Zahlen und die Sonderzeichen _, ., -, + sind erlaubt.";
+            return "Passwort enthält ungültige Zeichen. Nur Buchstaben, Zahlen und normale Sonderzeichen sind erlaubt. Leerzeichen sind nicht erlaubt.";
         }
 
         return new Unit();

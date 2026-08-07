@@ -1,14 +1,12 @@
 ﻿using DotchatClient.src.Application;
 using DotchatClient.src.Application.Interfaces;
 using DotchatClient.src.Application.Services;
-using DotchatClient.src.Core.Consts;
 using DotchatClient.src.Core.DTOs;
 using DotchatShared.src.Constants;
 using DotchatShared.src.DTOs;
 using DotchatShared.src.DTOs.AuthRequests;
 using DotchatShared.src.Interfaces;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 
 namespace DotchatClient.Components.Pages;
 
@@ -101,7 +99,7 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
     {
         if (current < min)
         {
-            return AtLimitClass; //TODO: mach in ne property
+            return AtLimitClass;
         }
 
         if (current >= max)
