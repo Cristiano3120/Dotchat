@@ -364,3 +364,5 @@ FodyWeavers.xsd
 
 # Enviroment
 .env
+
+DotchatClient/wwwroot/Secrets/client_secret.json

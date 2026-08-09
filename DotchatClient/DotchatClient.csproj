@@ -103,4 +103,8 @@
 		<PackageReference Include="Xamarin.AndroidX.Navigation.UI" Version="2.9.6" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="wwwroot\Secrets\" />
+	</ItemGroup>
+
 </Project>
