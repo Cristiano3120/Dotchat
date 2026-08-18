@@ -1,4 +1,5 @@
 ﻿using DotchatServer.src.Core.Interfaces;
+using DotchatShared.src.Interfaces;
 namespace DotchatServer.src.Application.DTOs.TemplateModels;
 
 /// <summary>

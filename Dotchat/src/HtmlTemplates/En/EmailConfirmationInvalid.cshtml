@@ -1,9 +1,10 @@
+@model DotchatServer.src.Application.DTOs.TemplateModels.EmailConfirmationFailedModel
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <title>E-Mail Bestätigung</title>
+    <title>Email Confirmation</title>
     <style>
             @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:ital,wght@0,700;1,400&display=swap');
 
@@ -150,21 +151,21 @@
                 </svg>
             </div>
 
-            <h2>Link ungültig</h2>
+            <h2>Link Invalid</h2>
 
             <p>
-                Deine E-Mail-Adresse kann nicht bestätigt werden,da der
-                Bestätigungslink bereits abgelaufen ist.
+                Your email address can´t be confirmed because the
+                confirmation link has expired.
             </p>
 
             <hr class="divider" />
 
             <p class="hint">
-                Du kannst die E-Mail-Bestätigung jederzeit in deinen
-                <strong>Kontoeinstellungen</strong> erneut anstoßen.
+                You can request a new confirmation link at any time from your
+                <strong>account settings</strong>.
             </p>
 
-            <a href="@Model.ResendUrl" class="btn">Neuen Link anfordern</a>
+            <a href="@Model.ResendUrl" class="btn">Request New Link</a>
 
         </div>
 

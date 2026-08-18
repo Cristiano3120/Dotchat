@@ -1,4 +1,4 @@
-﻿namespace DotchatServer.src.Application.Interfaces;
+﻿namespace DotchatShared.src.Interfaces;
 
 public interface IHtmlRenderable
 {

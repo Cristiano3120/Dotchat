@@ -161,7 +161,8 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
         //TODO: pack alles in einzelne methods und pack HTML in ne file
         string? code = context.Request.QueryString["code"];
         string? returnedState = context.Request.QueryString["state"];
-
+        //TODO:Hol template builder vom server und dann use die OAuthRedirect.cshtml
+        //TODO:Geb den TemplatePrecompiler ne addMethod und mach shared
         string html = BuildResponseHtml(success: code is not null);
         byte[] buffer = Encoding.UTF8.GetBytes(html);
         context.Response.ContentType = "text/html; charset=utf-8";

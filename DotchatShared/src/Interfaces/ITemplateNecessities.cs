@@ -1,9 +1,9 @@
-﻿namespace DotchatServer.src.Core.Interfaces;
+﻿namespace DotchatShared.src.Interfaces;
 
 /// <summary>
 /// Defines the necessary properties required for template generation
 /// </summary>
-internal interface ITemplateNecessities
+public interface ITemplateNecessities
 {
     /// <summary>
     /// Clients language, used for localization in templates. 

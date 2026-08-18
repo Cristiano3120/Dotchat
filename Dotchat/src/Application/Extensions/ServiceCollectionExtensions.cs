@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using DotchatServer.src.Application.Interfaces;
+using DotchatShared.src.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace DotchatServer.src.Application.Extensions;
@@ -29,6 +29,9 @@ internal static class ServiceCollectionExtensions
 
         return services;
     }
+
+    internal static IServiceCollection AddKeyedSingletonWithWarmup<TImplementation>(this IServiceCollection services, object key)
+        where TImplementation : class => services.AddKeyedSingleton<TImplementation>(key);
 
     /// <summary>
     /// Registers TImplementation as a singleton for TInterface and also registers the same instance as an IWarmable to

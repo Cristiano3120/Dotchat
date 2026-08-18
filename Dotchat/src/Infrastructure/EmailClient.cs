@@ -1,4 +1,4 @@
-﻿using DotchatServer.src.Application.DTOs.Emails;
+﻿using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Core.Config;
 using DotchatServer.src.Core.Interfaces;
 using DotNetEnv;
@@ -23,7 +23,7 @@ internal sealed class EmailClient : IEmailClient
         _appPassword = Env.GetString("GMAIL_APP_PASSWORD");
     }
 
-    public async Task<bool> TrySendEmailAsync(IEnumerable<MailboxAddress> recipients, Email email)
+    public async Task<bool> TrySendEmailAsync(IEnumerable<MailboxAddress> recipients, EmailTemplate email)
     {
         using SmtpClient client = new();
         try

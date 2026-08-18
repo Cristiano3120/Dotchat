@@ -1,9 +1,10 @@
+@model DotchatServer.src.Application.DTOs.TemplateModels.EmailConfirmationFailedModel
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 
 <head>
     <meta charset="UTF-8">
-    <title>Email Confirmation Error</title>
+    <title>Fehler bei der E-Mail-Bestätigung</title>
     <style>
             @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:ital,wght@0,700;1,400&display=swap');
 
@@ -150,21 +151,21 @@
                 </svg>
             </div>
 
-            <h2>Something Went Wrong</h2>
+            <h2>Ein Fehler ist aufgetreten</h2>
 
             <p>
-                An error occurred while confirming your email address.
-                Please try again later.
+                Bei der Bestätigung deiner E-Mail-Adresse ist ein Fehler aufgetreten.
+                Bitte versuche es später erneut.
             </p>
 
             <hr class="divider" />
 
             <p class="hint">
-                If this problem persists, please contact our
-                <strong>support team</strong> for assistance.
+                Falls das Problem weiterhin besteht, wende dich bitte an unseren
+                <strong>Support</strong>.
             </p>
 
-            <a href="@Model.ResendUrl" class="btn">Resend Confirmation Email</a>
+            <a href="@Model.ResendUrl" class="btn">Bestätigungsmail erneut senden</a>
 
         </div>
 

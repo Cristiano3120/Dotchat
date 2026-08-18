@@ -1,9 +1,10 @@
-﻿<!DOCTYPE html>
+﻿@model DotchatServer.src.Application.DTOs.EmailModels.VerificationEmailModel
+<!DOCTYPE html>
 <html lang="@Model.Language">
 
 <head>
     <meta charset="UTF-8">
-    <title>Resend Confirmation Email</title>
+    <title>Please confirm your email address</title>
 </head>
 <body style="margin:0; padding:0; background-color:#f4f4f4; font-family:Arial, sans-serif;">
 
@@ -25,37 +26,43 @@
                     <tr>
                         <td style="padding:40px 48px;">
                             <p style="font-size:16px; color:#111827; margin:0 0 16px;">
-                                Hello @Model.Name,
+                                Hello @Model.DisplayName,
                             </p>
                             <p style="font-size:16px; color:#374151; margin:0 0 32px;">
-                                we have sent you a new confirmation email.
-                                Please check your inbox and click the confirmation link.
+                                thank you for registering! Please confirm your
+                                email address by clicking the button below.
                             </p>
 
-                            <!-- Info Box -->
+                            <!-- Button -->
                             <table cellpadding="0" cellspacing="0" width="100%">
                                 <tr>
-                                    <td style="background-color:#F0F0FF; border-left:4px solid #4F46E5;
-                                        border-radius:4px; padding:16px 20px;">
-                                        <p style="font-size:14px; color:#374151; margin:0;">
-                                            📬 Make sure to also check your <strong>spam or junk folder</strong>
-                                            in case the email doesn't appear in your inbox.
-                                        </p>
+                                    <td align="center">
+                                        <a href="@Model.ConfirmUrl"
+                                           style="display:inline-block;
+                                            background-color:#4F46E5;
+                                            color:#ffffff;
+                                            padding:14px 32px;
+                                            border-radius:6px;
+                                            text-decoration:none;
+                                            font-size:16px;
+                                            font-weight:bold;">
+                                            Confirm email address
+                                        </a>
                                     </td>
                                 </tr>
                             </table>
 
-                            <!-- Resend hint -->
+                            <!-- Fallback Link -->
                             <p style="font-size:13px; color:#6B7280; margin:32px 0 0; text-align:center;">
-                                Didn't receive an email? You can request a new one at:<br />
-                                <a href="@Model.ResendUrl" style="color:#4F46E5; word-break:break-all;">
-                                    @Model.ResendUrl
+                                Button not working? Copy this link into your browser:<br />
+                                <a href="@Model.ConfirmUrl" style="color:#4F46E5; word-break:break-all;">
+                                    @Model.ConfirmUrl
                                 </a>
                             </p>
 
                             <!-- Expiry Warning -->
                             <p style="font-size:13px; color:#9CA3AF; margin:24px 0 0; text-align:center;">
-                                The confirmation link is valid until @Model.ExpiresAt.ToString("dd.MM.yyyy HH:mm").
+                                This link is valid until @Model.ExpiresAt.ToString("dd.MM.yyyy HH:mm").
                             </p>
                         </td>
                     </tr>

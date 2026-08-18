@@ -1,7 +1,6 @@
 ﻿using DotchatServer.src.Application.Commands;
 using DotchatServer.src.Application.DTOs;
 using DotchatServer.src.Application.DTOs.EmailModels;
-using DotchatServer.src.Application.DTOs.Emails;
 using DotchatServer.src.Application.DTOs.TemplateModels;
 using DotchatServer.src.Application.Enums;
 using DotchatServer.src.Application.Factories;
@@ -10,8 +9,8 @@ using DotchatServer.src.Application.Interfaces.Security;
 using DotchatServer.src.Core.Config;
 using DotchatServer.src.Core.Entities;
 using DotchatServer.src.Core.Extensions;
+using DotchatServer.src.Core.HtmlTemplates;
 using DotchatServer.src.Core.Interfaces;
-using DotchatServer.src.Core.Templates;
 using DotchatShared.src.Constants;
 using DotchatShared.src.DTOs;
 using DotchatShared.src.Enums;
@@ -30,10 +29,8 @@ internal sealed class AuthService(
     EmailConfirmationFailedModelFactory emailConfirmationFailedModelFactory,
     VerificationEmailFactory verificationEmailFactory,
     SnowflakeGenerator snowflakeGenerator,
-    [FromKeyedServices(TemplateFactoryKey.ResendConfirmation)] ITemplateFactory<HtmlTemplate> resendConfirmationEmailTemplateFactory,
-    [FromKeyedServices(TemplateFactoryKey.Confirmation)] ITemplateFactory<HtmlTemplate> confirmationEmailTemplateFactory,
+    ITemplateFactory htmlTemplateFactory,
     [FromKeyedServices(HashingAlgorithm.Argon2)] IHashingService hashingService,
-    ITemplateFactory<Email> emailFactory,
     IAuthRepository authRepository,
     IEmailClient emailClient,
     IRedisCache redisCache,
@@ -216,7 +213,7 @@ internal sealed class AuthService(
         }
 
         string confirmationUrl = BuildConfirmationUrl(token);
-        Email email = await CreateVerificationEmailAsync(token, applicationUser.Username, confirmationUrl, language);
+        EmailTemplate email = await CreateVerificationEmailAsync(token, applicationUser.Username, confirmationUrl, language);
         success = await emailClient.TrySendEmailAsync(recipients: [to], email);
         if (!success)
         {
@@ -248,7 +245,7 @@ internal sealed class AuthService(
 
         return (true, token);
     }
-
+    //TODO: Musst subjects für emails über nen extra service holen + alles testen
     private async Task<IHtmlRenderable> CreateEmailConfirmedTemplateAsync(string language)
     {
         EmailConfirmedModel model = emailConfirmationStatusModelFactory.CreateModel(language);
@@ -273,7 +270,7 @@ internal sealed class AuthService(
         return await resendConfirmationEmailTemplateFactory.CreateAsync(Templates.HtmlTemplates.ResendConfirmation, model);
     }
 
-    private async Task<Email> CreateVerificationEmailAsync(VerificationToken token, string displayName, string confirmationUrl, string language)
+    private async Task<EmailTemplate> CreateVerificationEmailAsync(VerificationToken token, string displayName, string confirmationUrl, string language)
     {
         VerificationEmailModel verificationEmailModel = verificationEmailFactory.CreateModel(displayName, confirmationUrl, language, token);
         return await emailFactory.CreateAsync(Templates.EmailTemplates.VerificationEmail, verificationEmailModel);

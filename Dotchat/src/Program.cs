@@ -1,5 +1,6 @@
 using Destructurama;
 using DotchatServer.src.Application.DTOs;
+using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Application.Extensions;
 using DotchatServer.src.Application.Interfaces;
 using DotchatServer.src.Application.Services;
@@ -7,9 +8,12 @@ using DotchatServer.src.Constants;
 using DotchatServer.src.Core.Config;
 using DotchatServer.src.Core.Entities;
 using DotchatServer.src.Core.Extensions;
+using DotchatServer.src.Core.HtmlTemplates;
 using DotchatServer.src.Infrastructure;
 using DotchatShared.src.Constants;
+using DotchatShared.src.DTOs;
 using DotchatShared.src.Enums;
+using DotchatShared.src.Interfaces;
 using DotchatShared.src.Services;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -61,7 +65,7 @@ public static class Program
 
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
         });
-        
+
         JwtSettings jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()
             ?? throw new InvalidOperationException("Failed to bind JwtSettings from configuration.");
 
@@ -168,6 +172,9 @@ public static class Program
             Log.Fatal("WebAddress is not configured. Please set the WebAddress in the configuration to start the application.");
             return;
         }
+
+        TemplatePrecompiler templatePrecompiler = app.Services.GetRequiredService<TemplatePrecompiler>();
+        templatePrecompiler.AddTemplatesToCompileAsync(Templates.GetAllTemplateNames());
 
         _ = app.Lifetime.ApplicationStarted.Register(() => app.Services.GetService<PipelineWarmupService>()?.WarmupAsync());
         await app.RunAsync(webAddress);

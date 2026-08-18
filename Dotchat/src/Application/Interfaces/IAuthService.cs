@@ -1,6 +1,7 @@
 ﻿using DotchatServer.src.Application.Commands;
 using DotchatServer.src.Application.DTOs;
 using DotchatShared.src.DTOs;
+using DotchatShared.src.Interfaces;
 
 namespace DotchatServer.src.Application.Interfaces;
 

@@ -1,5 +1,4 @@
-﻿using DotchatServer.src.Application.DTOs;
-using DotchatServer.src.Application.DTOs.Emails;
+﻿using DotchatServer.src.Application.DTOs.EmailModels;
 using DotchatServer.src.Application.Enums;
 using DotchatServer.src.Application.Extensions;
 using DotchatServer.src.Application.Interfaces;
@@ -8,6 +7,8 @@ using DotchatServer.src.Core.Config;
 using DotchatServer.src.Core.Interfaces;
 using DotchatServer.src.Infrastructure.Persistence;
 using DotchatServer.src.Infrastructure.Persistence.Repos;
+using DotchatShared.src.DTOs;
+using DotchatShared.src.Interfaces;
 using DotchatShared.src.Services;
 using Microsoft.EntityFrameworkCore;
 using RazorEngineCore;
@@ -36,19 +37,13 @@ internal static class InfrastructureServiceExtensions
 
         _ = services.AddSingleton<IRedisCache, RedisCache>();
         _ = services.AddSingleton<IRazorEngine, RazorEngine>();
-        _ = services.AddSingleton<ITemplateFactory<Email>, TemplateFactory<Email>>((services) => new TemplateFactory<Email>
-            (
-                razorEngine: services.GetRequiredService<IRazorEngine>(),
-                resxManager: ResxManager.From(env),
-                AppPath.From(env.ContentRootPath).Src().Go("EmailTemplates"),
-                new Func<string?, string, Email>((subject, body) => new Email(subject ?? string.Empty, body)
-            )));
-
-        _ = services.AddKeyedSingleton<ITemplateFactory<HtmlTemplate>>(TemplateFactoryKey.Confirmation, (services, _)
-            => CreateHtmlTemplateFactory(services, AppPath.From(env.ContentRootPath).Src().Go("EmailConfirmationTemplates")));
-
-        _ = services.AddKeyedSingleton<ITemplateFactory<HtmlTemplate>>(TemplateFactoryKey.ResendConfirmation, (services, _)
-            => CreateHtmlTemplateFactory(services, AppPath.From(env.ContentRootPath).Src().Go("EmailConfirmationResendTemplates")));
+        _ = services.AddSingleton<ITemplateFactory, TemplateFactory>(
+            (services) =>
+            {
+                IRazorEngine razorEngine = services.GetRequiredService<IRazorEngine>();
+                AppPath appPath = AppPath.From(env.ContentRootPath).Src().Go("HtmlTemplates");
+                return new TemplateFactory(razorEngine, appPath);
+            });
 
         _ = services.AddSingleton<IEmailClient, EmailClient>(services => new EmailClient(configuration.GetValue<bool>("SendEmailToFakeSMPT")
             ? configuration.GetSection("EmailSettingsDev").Get<EmailConfig>()!
@@ -59,16 +54,5 @@ internal static class InfrastructureServiceExtensions
             opt => opt.UseNpgsql(connectionString: configuration.GetConnectionString("PostgreSQL")));
 
         _ = services.AddScoped<IAuthRepository, AuthRepository>();
-    }
-
-    private static ITemplateFactory<HtmlTemplate> CreateHtmlTemplateFactory(IServiceProvider services, AppPath appPath)
-    {
-        return new TemplateFactory<HtmlTemplate>
-        (
-            razorEngine: services.GetRequiredService<IRazorEngine>(),
-            resxManager: ResxManager.From(services.GetRequiredService<IWebHostEnvironment>()),
-            appPath,
-            new Func<string?, string, HtmlTemplate>((_, body) => new HtmlTemplate(body))
-        );
     }
 }

@@ -1,6 +1,6 @@
-﻿using DotchatServer.src.Application.Interfaces;
+﻿using DotchatShared.src.Interfaces;
 
-namespace DotchatServer.src.Application.DTOs;
+namespace DotchatShared.src.DTOs;
 
 /// <summary>
 /// Represents an HTML template that can be rendered and returned as a response. This record encapsulates the HTML content
