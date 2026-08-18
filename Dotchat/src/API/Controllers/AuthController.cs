@@ -7,6 +7,7 @@ using DotchatShared.src.Constants;
 using DotchatShared.src.DTOs;
 using DotchatShared.src.DTOs.AuthRequests;
 using DotchatShared.src.Enums;
+using DotchatShared.src.Interfaces;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;

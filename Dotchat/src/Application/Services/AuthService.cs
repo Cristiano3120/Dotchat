@@ -11,6 +11,7 @@ using DotchatServer.src.Core.Entities;
 using DotchatServer.src.Core.Extensions;
 using DotchatServer.src.Core.HtmlTemplates;
 using DotchatServer.src.Core.Interfaces;
+using DotchatServer.Subjects;
 using DotchatShared.src.Constants;
 using DotchatShared.src.DTOs;
 using DotchatShared.src.Enums;
@@ -36,6 +37,7 @@ internal sealed class AuthService(
     IRedisCache redisCache,
     IJwtService jwtService,
     IUrlBuilder urlBuilder,
+    IEmailSubjectManager subjectManager,
     IOptions<ConfirmationEmailConfig> emailConfig) : IAuthService
 {
     public async Task<LoginResult> LoginAsync(LoginCommand loginRequest)
@@ -245,35 +247,36 @@ internal sealed class AuthService(
 
         return (true, token);
     }
-    //TODO: Musst subjects für emails über nen extra service holen + alles testen
+
     private async Task<IHtmlRenderable> CreateEmailConfirmedTemplateAsync(string language)
     {
         EmailConfirmedModel model = emailConfirmationStatusModelFactory.CreateModel(language);
-        return await confirmationEmailTemplateFactory.CreateAsync(Templates.HtmlTemplates.EmailConfirmed, model);
+        return await htmlTemplateFactory.CreateAsync(Templates.EmailConfirmed, model);
     }
 
     private async Task<IHtmlRenderable> CreateEmailConfirmationFailedTemplateAsync(string resendUrl, string language)
     {
         EmailConfirmationFailedModel model = emailConfirmationFailedModelFactory.CreateModel(resendUrl, language);
-        return await confirmationEmailTemplateFactory.CreateAsync(Templates.HtmlTemplates.EmailConfirmationFailed, model);
+        return await htmlTemplateFactory.CreateAsync(Templates.EmailConfirmationFailed, model);
     }
 
     private async Task<IHtmlRenderable> CreateEmailConfirmationFailedServerFaultTemplateAsync(string resendUrl, string language)
     {
         EmailConfirmationFailedModel model = emailConfirmationFailedModelFactory.CreateModel(resendUrl, language);
-        return await confirmationEmailTemplateFactory.CreateAsync(Templates.HtmlTemplates.EmailConfirmationFailedServerError, model);
+        return await htmlTemplateFactory.CreateAsync(Templates.EmailConfirmationFailedServerError, model);
     }
 
     private async Task<IHtmlRenderable> CreateResendConfirmationTemplateAsync(ApplicationUser user, string resendUrl, string language)
     {
         ResendConfirmationEmailModel model = resendConfirmationEmailModelFactory.CreateModel(user.DisplayName, resendUrl, language);
-        return await resendConfirmationEmailTemplateFactory.CreateAsync(Templates.HtmlTemplates.ResendConfirmation, model);
+        return await htmlTemplateFactory.CreateAsync(Templates.ResendConfirmation, model);
     }
 
     private async Task<EmailTemplate> CreateVerificationEmailAsync(VerificationToken token, string displayName, string confirmationUrl, string language)
     {
-        VerificationEmailModel verificationEmailModel = verificationEmailFactory.CreateModel(displayName, confirmationUrl, language, token);
-        return await emailFactory.CreateAsync(Templates.EmailTemplates.VerificationEmail, verificationEmailModel);
+        VerificationEmailModel model = verificationEmailFactory.CreateModel(displayName, confirmationUrl, language, token);
+        RawHtmlTemplate rawHtmlTemplate = await htmlTemplateFactory.CreateAsync(Templates.VerificationEmail, model);
+        return new EmailTemplate(subjectManager.GetSubject(SubjectNames.VerificationEmail, language), rawHtmlTemplate.HtmlBody); 
     }
 
     private string BuildResendUrl(Snowflake userId) => urlBuilder.AddUrl(Endpoints.AuthEndpoints.ResendConfirmationEndpoint)

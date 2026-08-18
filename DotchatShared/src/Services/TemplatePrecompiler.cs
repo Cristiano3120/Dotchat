@@ -58,7 +58,7 @@ public sealed class TemplatePrecompiler(ITemplateFactory templateFactory) : IWar
 
     private void Dispose()
     {
-        _templates?.Clear();
-        _templates = null;
+        //_templates?.Clear();
+        //_templates = null;
     }
 }

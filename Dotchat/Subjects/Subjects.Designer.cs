@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DotchatServer.src.HtmlTemplates.Subjects {
+namespace DotchatServer.Subjects {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace DotchatServer.src.HtmlTemplates.Subjects {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DotchatServer.src.HtmlTemplates.Subjects.Subjects", typeof(Subjects).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DotchatServer.Subjects.Subjects", typeof(Subjects).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

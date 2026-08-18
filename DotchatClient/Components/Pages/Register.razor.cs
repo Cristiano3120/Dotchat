@@ -184,7 +184,7 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
 
         httpListener.Stop();
     }
-
+    //TODO:Put into CsHtml file
     private string BuildResponseHtml(bool success)
     {
         string title = success ? "Login erfolgreich" : "Login fehlgeschlagen";
@@ -363,6 +363,7 @@ public partial class Register(IHttpApiClient httpApiClient, IDeviceInfoService d
             ErrorMessage = "True";
             //Save Jwt
             //Navigate to /home
+            ToggleLoadingState();//Remove 
             return;
         }
 

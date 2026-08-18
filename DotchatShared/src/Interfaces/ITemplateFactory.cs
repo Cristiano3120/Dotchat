@@ -22,5 +22,5 @@ public interface ITemplateFactory
     /// <param name="templateName"></param>
     /// <param name="language"></param>
     /// <returns></returns>
-    ValueTask<IRazorEngineCompiledTemplate<RazorEngineTemplateBase>> CompileAsync(string templateName, string language);
+    ValueTask<IRazorEngineCompiledTemplate> CompileAsync(string templateName, string language);
 }
